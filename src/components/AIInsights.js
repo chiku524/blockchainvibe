@@ -4,15 +4,12 @@ import {
   Sparkles,
   MessageCircle,
   Bot,
-  TrendingUp,
   Newspaper,
   ChevronRight,
   Loader2,
   Send,
-  Zap,
   BarChart2,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAIInsights, useAIDailyDigest, useAIAgents, useAIAsk } from '../hooks/useAI';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -212,7 +209,6 @@ const EmptyState = styled.p`
 `;
 
 const AIInsights = () => {
-  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [lastReply, setLastReply] = useState(null);
 

@@ -10,7 +10,6 @@ import toast from 'react-hot-toast';
 
 import NewsCard from './NewsCard';
 import NewsCardSkeleton from './NewsCardSkeleton';
-import LoadingSpinner from './LoadingSpinner';
 import ErrorState from './ErrorState';
 import { useNews } from '../hooks/useNews';
 import { useUser } from '../hooks/useUser';

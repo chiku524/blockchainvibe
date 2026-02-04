@@ -63,29 +63,6 @@ const ResultsContainer = styled.div`
   }
 `;
 
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 4rem 2rem;
-  color: ${props => props.theme.colors.textSecondary};
-`;
-
-const EmptyStateIcon = styled.div`
-  font-size: 4rem;
-  margin-bottom: 1rem;
-`;
-
-const EmptyStateTitle = styled.h3`
-  font-size: ${props => props.theme.fontSize.xl};
-  font-weight: ${props => props.theme.fontWeight.semibold};
-  margin-bottom: 0.5rem;
-  color: ${props => props.theme.colors.text};
-`;
-
-const EmptyStateDescription = styled.p`
-  font-size: ${props => props.theme.fontSize.lg};
-  margin-bottom: 2rem;
-`;
-
 const SuggestionsContainer = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
