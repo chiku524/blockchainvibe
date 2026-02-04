@@ -14,8 +14,12 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebar } from '../contexts/SidebarContext';
 
+const SIDEBAR_WIDTH_COLLAPSED = 80;
+const SIDEBAR_WIDTH_EXPANDED = 280;
+const ICON_BOX_SIZE = 28;
+
 const SidebarContainer = styled.aside`
-  width: ${props => props.collapsed ? '80px' : '280px'};
+  width: ${props => props.collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED}px;
   background: ${props => props.theme.colors.surface};
   border-right: 1px solid ${props => props.theme.colors.border};
   padding: 2rem 0;
@@ -24,7 +28,7 @@ const SidebarContainer = styled.aside`
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 100;
-  transition: width ${props => props.theme.transitions.normal};
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
   /* Custom scrollbar */
   &::-webkit-scrollbar {
@@ -46,14 +50,12 @@ const SidebarContainer = styled.aside`
   
   @media (max-width: ${props => props.theme.breakpoints.lg}) {
     transform: translateX(-100%);
-    transition: transform ${props => props.theme.transitions.fast};
+    transition: transform 0.2s ease;
   }
 `;
 
-// Removed toggle button; sidebar now expands/collapses on hover
-
 const SidebarHeader = styled.div`
-  padding: 0 ${props => props.collapsed ? '1rem' : '2rem'} 2rem ${props => props.collapsed ? '1rem' : '2rem'};
+  padding: 0 1rem 2rem 1rem;
   border-bottom: 1px solid ${props => props.theme.colors.border};
   margin-bottom: 2rem;
 `;
@@ -67,17 +69,18 @@ const Logo = styled.div`
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.primary};
   cursor: pointer;
+  min-height: 36px;
 `;
 
 const LogoImage = styled.img`
-  height: ${props => props.collapsed ? '32px' : '36px'};
+  height: 36px;
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
 `;
 
 const SidebarContent = styled.div`
-  padding: 0 ${props => props.collapsed ? '0.5rem' : '1rem'};
+  padding: 0 1rem;
 `;
 
 const MenuSection = styled.div`
@@ -91,24 +94,43 @@ const SectionTitle = styled.h3`
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 1rem;
-  padding: 0 ${props => props.collapsed ? '0.5rem' : '1rem'};
+  padding: 0 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: ${props => props.collapsed ? 0 : 1};
+  max-width: ${props => props.collapsed ? 0 : '100%'};
+  transition: opacity 0.2s ease, max-width 0.25s ease;
+`;
+
+const IconBox = styled.div`
+  width: ${ICON_BOX_SIZE}px;
+  min-width: ${ICON_BOX_SIZE}px;
+  height: ${ICON_BOX_SIZE}px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+`;
+
+const MenuLabel = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: ${props => props.collapsed ? 0 : 1};
+  max-width: ${props => props.collapsed ? 0 : '200px'};
+  transition: opacity 0.2s ease, max-width 0.25s ease;
 `;
 
 const MenuItem = styled.div`
   display: flex;
   align-items: center;
-  justify-content: ${props => props.collapsed ? 'center' : 'flex-start'};
-  gap: ${props => props.collapsed ? '0' : '0.75rem'};
-  padding: ${props => props.collapsed ? '0.75rem 0' : '0.75rem 1rem'};
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.5rem;
   margin-bottom: 0.25rem;
   border-radius: ${props => props.theme.borderRadius.lg};
   color: ${props => props.theme.colors.text};
   cursor: pointer;
-  transition: all ${props => props.theme.transitions.fast};
-  
-  & > svg {
-    flex-shrink: 0;
-  }
+  transition: background 0.2s ease, color 0.2s ease;
   
   &:hover {
     background: ${props => props.theme.colors.surfaceHover};
@@ -146,106 +168,105 @@ const Sidebar = () => {
       
       <SidebarHeader collapsed={collapsed}>
         <Logo collapsed={collapsed} onClick={() => navigate('/dashboard')}>
-          <LogoImage collapsed={collapsed} src="/logo.svg" alt="BlockchainVibe Logo" />
-          {!collapsed && 'BlockchainVibe'}
+          <LogoImage src="/logo.svg" alt="BlockchainVibe Logo" />
+          <MenuLabel collapsed={collapsed}>BlockchainVibe</MenuLabel>
         </Logo>
       </SidebarHeader>
       
       <SidebarContent collapsed={collapsed}>
         <MenuSection>
-          {!collapsed && <SectionTitle collapsed={collapsed}>Main</SectionTitle>}
-          <MenuItem 
-            collapsed={collapsed}
+          <SectionTitle collapsed={collapsed}>Main</SectionTitle>
+          <MenuItem
             className={isActive('/dashboard') ? 'active' : ''}
             onClick={() => navigate('/dashboard')}
             title="Dashboard"
           >
-            <TrendingUp size={18} />
-            {!collapsed && 'Dashboard'}
+            <IconBox><TrendingUp size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Dashboard</MenuLabel>
           </MenuItem>
-          <MenuItem 
-            collapsed={collapsed}
+          <MenuItem
             className={isActive('/trending') ? 'active' : ''}
-            onClick={() => navigate('/trending')} 
-            title="Trending">
-            <TrendingUp size={18} />
-            {!collapsed && 'Trending'}
+            onClick={() => navigate('/trending')}
+            title="Trending"
+          >
+            <IconBox><TrendingUp size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Trending</MenuLabel>
           </MenuItem>
-          <MenuItem 
-            collapsed={collapsed}
+          <MenuItem
             className={isActive('/for-you') ? 'active' : ''}
-            onClick={() => navigate('/for-you')} 
-            title="For You">
-            <Sparkles size={18} />
-            {!collapsed && 'For You'}
+            onClick={() => navigate('/for-you')}
+            title="For You"
+          >
+            <IconBox><Sparkles size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>For You</MenuLabel>
           </MenuItem>
-          <MenuItem 
-            collapsed={collapsed}
+          <MenuItem
             className={isActive('/news') ? 'active' : ''}
-            onClick={() => navigate('/news')} 
-            title="News Feed">
-            <Newspaper size={18} />
-            {!collapsed && 'News Feed'}
+            onClick={() => navigate('/news')}
+            title="News Feed"
+          >
+            <IconBox><Newspaper size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>News Feed</MenuLabel>
           </MenuItem>
-          <MenuItem 
-            collapsed={collapsed}
+          <MenuItem
             className={isActive('/saved') ? 'active' : ''}
-            onClick={() => navigate('/saved')} 
-            title="Saved Articles">
-            <Bookmark size={18} />
-            {!collapsed && 'Saved Articles'}
+            onClick={() => navigate('/saved')}
+            title="Saved Articles"
+          >
+            <IconBox><Bookmark size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Saved Articles</MenuLabel>
           </MenuItem>
-          <MenuItem 
-            collapsed={collapsed}
+          <MenuItem
             className={isActive('/liked') ? 'active' : ''}
-            onClick={() => navigate('/liked')} 
-            title="Liked Articles">
-            <Heart size={18} />
-            {!collapsed && 'Liked Articles'}
+            onClick={() => navigate('/liked')}
+            title="Liked Articles"
+          >
+            <IconBox><Heart size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Liked Articles</MenuLabel>
           </MenuItem>
         </MenuSection>
 
         <MenuSection>
-          {!collapsed && <SectionTitle collapsed={collapsed}>Analytics & AI</SectionTitle>}
-          <MenuItem 
-            collapsed={collapsed}
+          <SectionTitle collapsed={collapsed}>Analytics & AI</SectionTitle>
+          <MenuItem
             className={isActive('/analytics') ? 'active' : ''}
-            onClick={() => navigate('/analytics')} 
-            title="Analytics">
-            <BarChart3 size={18} />
-            {!collapsed && 'Analytics'}
+            onClick={() => navigate('/analytics')}
+            title="Analytics"
+          >
+            <IconBox><BarChart3 size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Analytics</MenuLabel>
           </MenuItem>
-          <MenuItem 
-            collapsed={collapsed}
+          <MenuItem
             className={isActive('/ai-insights') ? 'active' : ''}
-            onClick={() => navigate('/ai-insights')} 
-            title="AI Insights">
-            <Sparkles size={18} />
-            {!collapsed && 'AI Insights'}
+            onClick={() => navigate('/ai-insights')}
+            title="AI Insights"
+          >
+            <IconBox><Sparkles size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>AI Insights</MenuLabel>
           </MenuItem>
         </MenuSection>
 
         <MenuSection>
-          {!collapsed && <SectionTitle collapsed={collapsed}>Account</SectionTitle>}
-          <MenuItem 
-            collapsed={collapsed}
+          <SectionTitle collapsed={collapsed}>Account</SectionTitle>
+          <MenuItem
             className={isActive('/profile') ? 'active' : ''}
-            onClick={() => navigate('/profile')} 
-            title="Profile">
-            <User size={18} />
-            {!collapsed && 'Profile'}
+            onClick={() => navigate('/profile')}
+            title="Profile"
+          >
+            <IconBox><User size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Profile</MenuLabel>
           </MenuItem>
-          <MenuItem 
-            collapsed={collapsed}
+          <MenuItem
             className={isActive('/settings') ? 'active' : ''}
-            onClick={() => navigate('/settings')} 
-            title="Settings">
-            <Settings size={18} />
-            {!collapsed && 'Settings'}
+            onClick={() => navigate('/settings')}
+            title="Settings"
+          >
+            <IconBox><Settings size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Settings</MenuLabel>
           </MenuItem>
-          <MenuItem collapsed={collapsed} onClick={handleLogout} title="Logout">
-            <LogOut size={18} />
-            {!collapsed && 'Logout'}
+          <MenuItem onClick={handleLogout} title="Logout">
+            <IconBox><LogOut size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Logout</MenuLabel>
           </MenuItem>
         </MenuSection>
       </SidebarContent>

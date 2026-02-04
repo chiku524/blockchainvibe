@@ -17,6 +17,7 @@ import ProfileCompletionModal from '../Auth/ProfileCompletionModal';
 import { newsAPI } from '../../services/api';
 import { handleApiError } from '../../utils/errorHandler';
 import { useAIInsights } from '../../hooks/useAI';
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
@@ -270,6 +271,7 @@ const DashboardContent = () => {
   const [analytics, setAnalytics] = useState({ articlesRead: 0, timeSpentMinutes: 0 });
   const { data: insightsData } = useAIInsights();
   const aiInsights = insightsData?.insights || [];
+  useDocumentTitle('Dashboard');
 
   // Check if profile completion is needed
   useEffect(() => {

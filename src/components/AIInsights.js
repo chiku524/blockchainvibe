@@ -15,6 +15,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAIInsights, useAIDailyDigest, useAIAgents, useAIAsk } from '../hooks/useAI';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import LoadingSpinner from './LoadingSpinner';
 
 const PageContainer = styled.div`
@@ -219,6 +220,7 @@ const AIInsights = () => {
   const { data: digestData, isLoading: digestLoading } = useAIDailyDigest();
   const { data: agentsData, isLoading: agentsLoading } = useAIAgents();
   const askMutation = useAIAsk();
+  useDocumentTitle('AI Insights');
 
   const handleAsk = async (e) => {
     e.preventDefault();

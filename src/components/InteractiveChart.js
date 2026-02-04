@@ -60,9 +60,10 @@ const BarContainer = styled.div`
 
 const Bar = styled(motion.div)`
   width: 100%;
+  min-height: 4px;
   background: linear-gradient(180deg, 
-    ${props => props.theme.colors.primary} 0%, 
-    ${props => props.theme.colors.secondary} 100%
+    ${props => props.$empty ? props.theme.colors.border : props.theme.colors.primary} 0%, 
+    ${props => props.$empty ? props.theme.colors.border : props.theme.colors.secondary} 100%
   );
   border-radius: 4px 4px 0 0;
   position: relative;
@@ -137,24 +138,54 @@ const LoadingText = styled.div`
   font-size: ${props => props.theme.fontSize.sm};
 `;
 
-const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate }) => {
+const DEFAULT_PLACEHOLDER = [
+  { label: 'Sun', value: 0 },
+  { label: 'Mon', value: 0 },
+  { label: 'Tue', value: 0 },
+  { label: 'Wed', value: 0 },
+  { label: 'Thu', value: 0 },
+  { label: 'Fri', value: 0 },
+  { label: 'Sat', value: 0 },
+];
+
+const PlaceholderMessage = styled.div`
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: ${props => props.theme.colors.textSecondary};
+  font-size: ${props => props.theme.fontSize.sm};
+  white-space: nowrap;
+`;
+
+const DataStatus = styled.span`
+  font-size: ${props => props.theme.fontSize.xs};
+  color: ${props => props.theme.colors.textSecondary};
+  opacity: 0.9;
+  margin-left: 0.5rem;
+`;
+
+const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate, dataStatus }) => {
   const [isLoading] = useState(false);
-  const [chartData, setChartData] = useState(data || []);
+  const [chartData, setChartData] = useState(
+    () => (data && Array.isArray(data) && data.length > 0 ? data : DEFAULT_PLACEHOLDER)
+  );
   const chartRef = useRef(null);
 
-  // Pass-through: real processing happens server-side
-  const processDataWithUAgents = async (rawData) => {
-    return rawData;
-  };
-
   useEffect(() => {
-    if (data && data.length > 0) {
-      processDataWithUAgents(data).then(setChartData);
+    if (data && Array.isArray(data)) {
+      setChartData(data.length > 0 ? data : DEFAULT_PLACEHOLDER);
     }
   }, [data]);
 
   const maxValue = Math.max(...chartData.map(item => (item && typeof item.value === 'number' ? item.value : 0)), 1);
   const hasData = chartData.some(item => item && (item.value || 0) > 0);
+  const barHeightPercent = (val, max) => {
+    if (max <= 0) return 8;
+    const pct = (val / max) * 100;
+    return val === 0 ? 8 : Math.max(pct, 8);
+  };
 
   const handleBarClick = (item, index) => {
     if (onDataUpdate) {
@@ -168,15 +199,7 @@ const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate }) => {
 
   const displayData = Array.isArray(chartData) && chartData.length > 0
     ? chartData
-    : [
-        { label: 'Sun', value: 0 },
-        { label: 'Mon', value: 0 },
-        { label: 'Tue', value: 0 },
-        { label: 'Wed', value: 0 },
-        { label: 'Thu', value: 0 },
-        { label: 'Fri', value: 0 },
-        { label: 'Sat', value: 0 },
-      ];
+    : DEFAULT_PLACEHOLDER;
 
   return (
     <ChartContainer ref={chartRef}>
@@ -186,6 +209,7 @@ const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate }) => {
           <Brain size={16} />
           <Zap size={16} />
           <span>uAgents AI</span>
+          <DataStatus>{dataStatus != null ? dataStatus : (hasData ? 'Data loaded' : 'No statistics yet')}</DataStatus>
         </UAgentsBadge>
       </ChartHeader>
       
@@ -193,11 +217,12 @@ const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate }) => {
         {displayData.map((item, index) => {
           const val = item && typeof item.value === 'number' ? item.value : 0;
           const label = item && item.label != null ? item.label : '';
+          const heightPct = barHeightPercent(val, maxValue);
           return (
             <BarContainer key={`${label}-${index}`}>
               <Bar
                 initial={{ height: 0 }}
-                animate={{ height: `${(val / maxValue) * 100}%` }}
+                animate={{ height: `${heightPct}%` }}
                 transition={{
                   duration: 0.8,
                   delay: index * 0.05,
@@ -205,6 +230,7 @@ const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate }) => {
                 }}
                 onClick={() => handleBarClick(item, index)}
                 whileHover={{ scaleY: 1.05 }}
+                $empty={val === 0}
               >
                 <BarValue>{val}</BarValue>
               </Bar>
@@ -214,9 +240,9 @@ const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate }) => {
         })}
       </ChartArea>
       {!hasData && displayData.length > 0 && (
-        <LoadingText style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', marginTop: 0 }}>
+        <PlaceholderMessage>
           No reading data yet — read articles to see trends
-        </LoadingText>
+        </PlaceholderMessage>
       )}
       
       {isLoading && (

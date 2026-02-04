@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import styled from 'styled-components';
 import Sidebar from './Sidebar';
 import AnimatedBackground from './AnimatedBackground';
 import Footer from './Footer';
+import { SubscriptionBanner } from './Subscription';
 import { useSidebar } from '../contexts/SidebarContext';
 
 const LayoutContainer = styled.div`
@@ -10,6 +11,28 @@ const LayoutContainer = styled.div`
   flex-direction: column;
   min-height: 100vh;
   position: relative;
+`;
+
+const SkipToContent = styled.a`
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 1000;
+  padding: 0.75rem 1.25rem;
+  background: ${(p) => p.theme.colors.primary};
+  color: ${(p) => p.theme.colors.textInverse};
+  font-size: ${(p) => p.theme.fontSize.sm};
+  font-weight: ${(p) => p.theme.fontWeight.medium};
+  border-radius: ${(p) => p.theme.borderRadius.md};
+  text-decoration: none;
+  transition: top 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    top: 1rem;
+    outline: 2px solid ${(p) => p.theme.colors.primary};
+    outline-offset: 2px;
+    box-shadow: ${(p) => p.theme.shadows.lg};
+  }
 `;
 
 const ContentWrapper = styled.div`
@@ -34,13 +57,30 @@ const MainContent = styled.main`
 
 const Layout = ({ children, showSidebar = true }) => {
   const { collapsed } = useSidebar();
-  
+  const mainRef = useRef(null);
+
+  const handleSkipClick = (e) => {
+    e.preventDefault();
+    mainRef.current?.focus({ preventScroll: false });
+    mainRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <LayoutContainer>
+      <SkipToContent href="#main-content" onClick={handleSkipClick}>
+        Skip to main content
+      </SkipToContent>
       <AnimatedBackground />
       <ContentWrapper>
         {showSidebar && <Sidebar />}
-        <MainContent sidebarCollapsed={collapsed}>
+        <MainContent
+          id="main-content"
+          ref={mainRef}
+          tabIndex={-1}
+          sidebarCollapsed={collapsed}
+          aria-label="Main content"
+        >
+          <SubscriptionBanner />
           {children}
         </MainContent>
       </ContentWrapper>

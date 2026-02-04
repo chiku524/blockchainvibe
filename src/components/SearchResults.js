@@ -1,10 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSearchNews } from '../hooks/useNews';
 import { useUser } from '../hooks/useUser';
 import NewsCard from './NewsCard';
 import LoadingSpinner from './LoadingSpinner';
+import ErrorState from './ErrorState';
+import EmptyState from './EmptyState';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { getErrorMessage } from '../utils/errorHandler';
 
 const SearchContainer = styled.div`
   max-width: 1200px;
@@ -122,9 +126,11 @@ const SuggestionTag = styled.button`
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const query = searchParams.get('q') || '';
-  const { data: searchData, isLoading, error } = useSearchNews(query);
+  const { data: searchData, isLoading, error, refetch, isFetching } = useSearchNews(query);
   const { trackActivity } = useUser();
+  useDocumentTitle(query ? `Search: ${query}` : 'Search');
 
   const handleNewsInteraction = async (newsId, action) => {
     try {
@@ -147,44 +153,42 @@ const SearchResults = () => {
 
   if (error) {
     return (
-      <SearchContainer>
-        <EmptyState>
-          <EmptyStateIcon>⚠️</EmptyStateIcon>
-          <EmptyStateTitle>Search Error</EmptyStateTitle>
-          <EmptyStateDescription>
-            There was an error searching for news. Please try again.
-          </EmptyStateDescription>
-        </EmptyState>
+      <SearchContainer style={{ padding: '2rem' }}>
+        <ErrorState
+          title="Search error"
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </SearchContainer>
     );
   }
 
   if (!searchData || !searchData.results || searchData.results.length === 0) {
+    const suggestions = ['Bitcoin', 'Ethereum', 'DeFi', 'NFTs', 'Web3', 'Blockchain', 'Crypto'];
     return (
       <SearchContainer>
         <SearchHeader>
           <SearchTitle>Search Results for "{query}"</SearchTitle>
           <SearchSubtitle>No articles found matching your search.</SearchSubtitle>
         </SearchHeader>
-        
-        <EmptyState>
-          <EmptyStateIcon>🔍</EmptyStateIcon>
-          <EmptyStateTitle>No Results Found</EmptyStateTitle>
-          <EmptyStateDescription>
-            Try adjusting your search terms or browse our trending news instead.
-          </EmptyStateDescription>
-        </EmptyState>
-
-        <SuggestionsContainer>
-          <SuggestionsTitle>Popular Search Terms</SuggestionsTitle>
-          <SuggestionsList>
-            {['Bitcoin', 'Ethereum', 'DeFi', 'NFTs', 'Web3', 'Blockchain', 'Crypto'].map(term => (
-              <SuggestionTag key={term}>
-                {term}
-              </SuggestionTag>
-            ))}
-          </SuggestionsList>
-        </SuggestionsContainer>
+        <EmptyState
+          icon="🔍"
+          title="No results found"
+          description="Try adjusting your search terms or browse trending news."
+          action={
+            <SuggestionsContainer>
+              <SuggestionsTitle>Popular search terms</SuggestionsTitle>
+              <SuggestionsList>
+                {suggestions.map((term) => (
+                  <SuggestionTag key={term} onClick={() => navigate(`/search?q=${encodeURIComponent(term)}`)}>
+                    {term}
+                  </SuggestionTag>
+                ))}
+              </SuggestionsList>
+            </SuggestionsContainer>
+          }
+        />
       </SearchContainer>
     );
   }

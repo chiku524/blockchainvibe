@@ -9,9 +9,13 @@ import {
 import toast from 'react-hot-toast';
 
 import NewsCard from './NewsCard';
+import NewsCardSkeleton from './NewsCardSkeleton';
 import LoadingSpinner from './LoadingSpinner';
+import ErrorState from './ErrorState';
 import { useNews } from '../hooks/useNews';
 import { useUser } from '../hooks/useUser';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { getErrorMessage } from '../utils/errorHandler';
 
 const FeedContainer = styled.div`
   max-width: 1200px;
@@ -255,7 +259,7 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
     { value: 'regulation', label: 'Regulation' }
   ];
   
-  const { data: newsData, isLoading, error, refetch } = useNews({
+  const { data: newsData, isLoading, error, refetch, isFetching } = useNews({
     category: categoryFilter,
     timeframe: timeFilter === 'all' ? null : timeFilter,
     searchQuery,
@@ -265,6 +269,8 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
   });
 
   const { trackActivity } = useUser();
+
+  useDocumentTitle(searchQuery ? `Search: ${searchQuery}` : 'News Feed');
 
   useEffect(() => {
     if (newsData?.news) {
@@ -315,7 +321,15 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
   if (isLoading && page === 1) {
     return (
       <FeedContainer>
-        <LoadingSpinner />
+        <FeedHeader>
+          <FeedTitle>Blockchain News Feed</FeedTitle>
+          <FeedSubtitle>Loading…</FeedSubtitle>
+        </FeedHeader>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          {[...Array(6)].map((_, i) => (
+            <NewsCardSkeleton key={i} />
+          ))}
+        </div>
       </FeedContainer>
     );
   }
@@ -323,17 +337,12 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
   if (error) {
     return (
       <FeedContainer>
-        <EmptyState>
-          <EmptyStateIcon>⚠️</EmptyStateIcon>
-          <EmptyStateTitle>Error Loading News</EmptyStateTitle>
-          <EmptyStateDescription>
-            There was an error loading the news feed. Please try again.
-          </EmptyStateDescription>
-          <ControlButton onClick={handleRefresh}>
-            <RefreshCw size={18} />
-            Try Again
-          </ControlButton>
-        </EmptyState>
+        <ErrorState
+          title="Error loading news"
+          message={getErrorMessage(error)}
+          onRetry={() => { setPage(1); setAllNews([]); refetch(); }}
+          isRetrying={isFetching}
+        />
       </FeedContainer>
     );
   }
@@ -474,9 +483,10 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
       {newsData?.has_more && (
         <LoadMoreButton
           onClick={handleLoadMore}
-          disabled={isLoading}
+          disabled={isFetching}
+          aria-busy={isFetching}
         >
-          {isLoading ? (
+          {isFetching ? (
             <>
               <RefreshCw size={18} className="animate-spin" />
               Loading more news...

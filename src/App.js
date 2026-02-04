@@ -99,11 +99,22 @@ const GlobalStyle = createGlobalStyle`
     color: ${props => props.theme.colors.primaryHover};
   }
 
+  a:focus-visible {
+    outline: 2px solid ${props => props.theme.colors.primary};
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
   button {
     cursor: pointer;
     border: none;
     outline: none;
     font-family: inherit;
+  }
+
+  button:focus-visible {
+    outline: 2px solid ${props => props.theme.colors.primary};
+    outline-offset: 2px;
   }
 
   input, textarea {
@@ -125,6 +136,14 @@ const GlobalStyle = createGlobalStyle`
 
   ::-webkit-scrollbar-thumb:hover {
     background: ${props => props.theme.colors.textSecondary};
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 `;
 
