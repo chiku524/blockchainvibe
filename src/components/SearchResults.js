@@ -13,34 +13,66 @@ import { getErrorMessage } from '../utils/errorHandler';
 const SearchContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const SearchHeader = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 2rem;
-  margin-bottom: 2rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const SearchTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['2xl']};
+  font-size: ${props => props.theme.fontSize.xl};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.text};
   margin-bottom: 0.5rem;
+  word-break: break-word;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['2xl']};
+  }
 `;
 
 const SearchSubtitle = styled.p`
   color: ${props => props.theme.colors.textSecondary};
-  font-size: ${props => props.theme.fontSize.lg};
-  margin-bottom: 1.5rem;
+  font-size: ${props => props.theme.fontSize.sm};
+  margin-bottom: 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize.lg};
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const SearchStats = styled.div`
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
   flex-wrap: wrap;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    gap: 2rem;
+  }
 `;
 
 const StatItem = styled.div`
@@ -53,13 +85,17 @@ const StatItem = styled.div`
 
 const ResultsContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    margin-bottom: 2rem;
   }
 `;
 

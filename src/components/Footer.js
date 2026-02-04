@@ -13,21 +13,22 @@ const FooterContainer = styled.footer`
 const FooterInner = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem 1rem;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 
-  @media (max-width: 1200px) {
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-  }
-
-  @media (max-width: 900px) {
+  @media (min-width: 640px) {
     grid-template-columns: 1fr 1fr;
+    padding: 1.5rem;
   }
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
+  @media (min-width: 900px) {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2rem;
+    padding: 2rem;
+  }
+  @media (min-width: 1200px) {
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
   }
 `;
 
@@ -102,13 +103,22 @@ const BottomBar = styled.div`
 const BottomInner = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   color: ${props => props.theme.colors.textSecondary};
-  font-size: ${props => props.theme.fontSize.sm};
+  font-size: ${props => props.theme.fontSize.xs};
+  flex-wrap: wrap;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 0 1.5rem;
+    font-size: ${props => props.theme.fontSize.sm};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 0 2rem;
+  }
   @media (max-width: 600px) {
     flex-direction: column;
     align-items: flex-start;

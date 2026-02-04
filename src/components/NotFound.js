@@ -6,49 +6,83 @@ import { useNavigate } from 'react-router-dom';
 
 const NotFoundContainer = styled.div`
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: ${props => props.theme.colors.background};
-  padding: 2rem;
+  padding: 1rem;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 2rem;
+  }
 `;
 
 const NotFoundContent = styled(motion.div)`
   text-align: center;
   max-width: 600px;
+  width: 100%;
 `;
 
 const NotFoundIcon = styled.div`
-  font-size: 8rem;
-  margin-bottom: 2rem;
+  font-size: 6rem;
+  margin-bottom: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: 8rem;
+    margin-bottom: 2rem;
+  }
 `;
 
 const LogoIcon = styled.img`
-  width: 120px;
-  height: 120px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    width: 120px;
+    height: 120px;
+  }
 `;
 
 const NotFoundTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['4xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.text};
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['4xl']};
+    margin-bottom: 1rem;
+  }
 `;
 
 const NotFoundDescription = styled.p`
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.textSecondary};
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   line-height: 1.6;
+  padding: 0 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.lg};
+    margin-bottom: 2rem;
+  }
 `;
 
 const ActionButtons = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   justify-content: center;
   flex-wrap: wrap;
 `;

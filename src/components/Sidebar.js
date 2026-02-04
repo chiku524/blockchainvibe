@@ -16,38 +16,36 @@ import { useSidebar } from '../contexts/SidebarContext';
 
 const SIDEBAR_WIDTH_COLLAPSED = 80;
 const SIDEBAR_WIDTH_EXPANDED = 280;
-const ICON_BOX_SIZE = 28;
+const ICON_BOX_SIZE = 24;
 
 const SidebarContainer = styled.aside`
   width: ${props => props.collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED}px;
   background: ${props => props.theme.colors.surface};
   border-right: 1px solid ${props => props.theme.colors.border};
-  padding: 2rem 0;
+  padding: 0.75rem 0;
   position: fixed;
+  top: 0;
+  left: 0;
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 100;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* Custom scrollbar */
+  display: flex;
+  flex-direction: column;
+
+  /* Hide scrollbar by default; show on hover if content overflows (e.g. small viewports) */
   &::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
   }
-  
   &::-webkit-scrollbar-track {
     background: transparent;
   }
-  
   &::-webkit-scrollbar-thumb {
     background: ${props => props.theme.colors.border};
-    border-radius: 3px;
+    border-radius: 2px;
   }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: ${props => props.theme.colors.textSecondary};
-  }
-  
+
   @media (max-width: ${props => props.theme.breakpoints.lg}) {
     transform: translateX(-100%);
     transition: transform 0.2s ease;
@@ -55,45 +53,48 @@ const SidebarContainer = styled.aside`
 `;
 
 const SidebarHeader = styled.div`
-  padding: 0 1rem 2rem 1rem;
+  padding: 0 0.75rem 0.75rem 0.75rem;
   border-bottom: 1px solid ${props => props.theme.colors.border};
-  margin-bottom: 2rem;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
 `;
 
 const Logo = styled.div`
   display: flex;
   align-items: center;
   justify-content: ${props => props.collapsed ? 'center' : 'flex-start'};
-  gap: 0.75rem;
-  font-size: ${props => props.theme.fontSize.xl};
+  gap: 0.5rem;
+  font-size: ${props => props.theme.fontSize.lg};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.primary};
   cursor: pointer;
-  min-height: 36px;
+  min-height: 32px;
 `;
 
 const LogoImage = styled.img`
-  height: 36px;
+  height: 32px;
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
 `;
 
 const SidebarContent = styled.div`
-  padding: 0 1rem;
+  padding: 0 0.75rem;
+  flex: 1;
+  min-height: 0;
 `;
 
 const MenuSection = styled.div`
-  margin-bottom: 2rem;
+  margin-bottom: 0.5rem;
 `;
 
 const SectionTitle = styled.h3`
-  font-size: ${props => props.theme.fontSize.sm};
+  font-size: ${props => props.theme.fontSize.xs};
   font-weight: ${props => props.theme.fontWeight.semibold};
   color: ${props => props.theme.colors.textSecondary};
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
   padding: 0 0.25rem;
   white-space: nowrap;
   overflow: hidden;
@@ -118,25 +119,26 @@ const MenuLabel = styled.span`
   opacity: ${props => props.collapsed ? 0 : 1};
   max-width: ${props => props.collapsed ? 0 : '200px'};
   transition: opacity 0.2s ease, max-width 0.25s ease;
+  font-size: ${props => props.theme.fontSize.sm};
 `;
 
 const MenuItem = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.75rem;
-  padding: 0.75rem 0.5rem;
-  margin-bottom: 0.25rem;
-  border-radius: ${props => props.theme.borderRadius.lg};
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  margin-bottom: 0.125rem;
+  border-radius: ${props => props.theme.borderRadius.md};
   color: ${props => props.theme.colors.text};
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
-  
+
   &:hover {
     background: ${props => props.theme.colors.surfaceHover};
     color: ${props => props.theme.colors.primary};
   }
-  
+
   &.active {
     background: ${props => props.theme.colors.primary}10;
     color: ${props => props.theme.colors.primary};

@@ -19,7 +19,16 @@ import LoadingSpinner from './LoadingSpinner';
 const DetailContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const BackButton = styled.button`
@@ -33,8 +42,11 @@ const BackButton = styled.button`
   border-radius: ${props => props.theme.borderRadius.md};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.fast};
-  margin-bottom: 2rem;
-  
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    margin-bottom: 2rem;
+  }
   &:hover {
     background: ${props => props.theme.colors.surfaceHover};
     border-color: ${props => props.theme.colors.primary};
@@ -49,24 +61,45 @@ const ArticleContainer = styled.article`
 `;
 
 const ArticleHeader = styled.div`
-  padding: 2rem;
+  padding: 1rem;
   border-bottom: 1px solid ${props => props.theme.colors.border};
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const ArticleTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['3xl']};
+  font-size: ${props => props.theme.fontSize.xl};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.text};
   line-height: 1.3;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  word-break: break-word;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['2xl']};
+    margin-bottom: 1rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
 `;
 
 const ArticleMeta = styled.div`
   display: flex;
   align-items: center;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const MetaItem = styled.div`
@@ -84,31 +117,59 @@ const SourceName = styled.span`
 
 const ArticleImage = styled.img`
   width: 100%;
-  height: 400px;
+  height: 200px;
   object-fit: cover;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    height: 300px;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    height: 400px;
+  }
 `;
 
 const ImagePlaceholder = styled.div`
   width: 100%;
-  height: 400px;
+  height: 200px;
   background: ${props => props.theme.gradients.surface};
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4rem;
+  font-size: 2.5rem;
   color: ${props => props.theme.colors.textMuted};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    height: 300px;
+    font-size: 3.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    height: 400px;
+    font-size: 4rem;
+  }
 `;
 
 const ArticleContent = styled.div`
-  padding: 2rem;
+  padding: 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const ArticleExcerpt = styled.p`
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.base};
   color: ${props => props.theme.colors.textSecondary};
   line-height: 1.7;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-style: italic;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize.lg};
+    margin-bottom: 2rem;
+  }
 `;
 
 const ArticleBody = styled.div`

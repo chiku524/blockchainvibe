@@ -22,25 +22,45 @@ const DocPageContainer = styled.div`
 const PageContainer = styled.div`
   max-width: 1400px;
   margin: 0 auto;
-  padding: 6rem 2rem 2rem 2rem;
+  padding: 5rem 1rem 2rem;
   position: relative;
   z-index: 1;
   display: flex;
-  gap: 2rem;
+  flex-direction: column;
+  gap: 1.5rem;
   align-items: flex-start;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    flex-direction: row;
+    padding: 6rem 1.5rem 2rem;
+    gap: 2rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 6rem 2rem 2rem;
+  }
 `;
 
 const ContentWrapper = styled.div`
   flex: 1;
-  min-width: 0; /* Prevents flex item from overflowing */
+  min-width: 0;
+  width: 100%;
 `;
 
 const PageContent = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 3rem;
+  padding: 1.25rem;
   min-height: 60vh;
+  overflow-x: auto;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 2rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 3rem;
+  }
   
   h2 {
     font-size: ${props => props.theme.fontSize['2xl']};

@@ -21,42 +21,79 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
-  padding: 2rem;
+  padding: 1rem;
   position: relative;
   z-index: 2;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 1rem;
+  }
 `;
 
 const Title = styled.h1`
-  font-size: ${props => props.theme.fontSize['3xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.text};
   margin: 0;
+  word-break: break-word;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
 `;
 
 const Subtitle = styled.p`
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.textSecondary};
   margin: 0.5rem 0 0 0;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize.lg};
+  }
 `;
 
 const HeaderActions = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
+  flex-wrap: wrap;
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    width: 100%;
+  }
 `;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
 `;
 
 const StatCard = styled.div`
@@ -96,22 +133,29 @@ const SearchContainer = styled.div`
 `;
 
 const SearchInput = styled.input`
-  width: 300px;
+  width: 100%;
+  min-width: 0;
+  max-width: 300px;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
   background: ${props => props.theme.colors.surface};
   color: ${props => props.theme.colors.text};
   font-size: ${props => props.theme.fontSize.sm};
-  
+  box-sizing: border-box;
+
   &:focus {
     outline: none;
     border-color: ${props => props.theme.colors.primary};
     box-shadow: 0 0 0 3px ${props => props.theme.colors.primary}20;
   }
-  
+
   &::placeholder {
     color: ${props => props.theme.colors.textSecondary};
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    max-width: none;
   }
 `;
 
@@ -153,11 +197,12 @@ const RefreshButton = styled.button`
 
 const ContentGrid = styled.div`
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
-  
-  @media (max-width: ${props => props.theme.breakpoints.lg}) {
-    grid-template-columns: 1fr;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
   }
 `;
 
@@ -165,7 +210,12 @@ const NewsSection = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 1.5rem;
+  padding: 1rem;
+  min-width: 0;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
 `;
 
 const SectionHeader = styled.div`

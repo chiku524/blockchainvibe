@@ -18,44 +18,86 @@ import InteractiveChart from './InteractiveChart';
 const AnalyticsContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const AnalyticsHeader = styled.div`
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    margin-bottom: 3rem;
+  }
 `;
 
 const AnalyticsTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['4xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   background: ${props => props.theme.gradients.text};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize['4xl']};
+    margin-bottom: 1rem;
+  }
 `;
 
 const AnalyticsSubtitle = styled.p`
   color: ${props => props.theme.colors.textSecondary};
-  font-size: ${props => props.theme.fontSize.lg};
-  margin-bottom: 2rem;
+  font-size: ${props => props.theme.fontSize.sm};
+  margin-bottom: 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize.lg};
+    margin-bottom: 2rem;
+  }
 `;
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    margin-bottom: 3rem;
+  }
 `;
 
 const StatCard = styled(motion.div)`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 2rem;
+  padding: 1rem;
   text-align: center;
   transition: transform ${props => props.theme.transitions.fast};
-  
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
   &:hover {
     transform: translateY(-4px);
   }
@@ -99,12 +141,14 @@ const StatChange = styled.div`
 
 const ChartsGrid = styled.div`
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
-  margin-bottom: 3rem;
-  
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
   }
 `;
 
@@ -112,7 +156,15 @@ const ChartCard = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 2rem;
+  padding: 1rem;
+  min-width: 0;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const ChartTitle = styled.h3`

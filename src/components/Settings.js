@@ -8,12 +8,15 @@ import {
   Shield, 
   Palette,
   Save,
-  Camera
+  Camera,
+  Crown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTheme } from '../contexts/ThemeContext';
 import { useUser } from '../hooks/useUser';
+import { subscriptionEnabled } from '../config/features';
 import ProfileCompletionModal from './Auth/ProfileCompletionModal';
+import { SubscriptionSettings } from './Subscription';
 
 const HiddenFileInput = styled.input`
   display: none;
@@ -22,39 +25,67 @@ const HiddenFileInput = styled.input`
 const SettingsContainer = styled.div`
   max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const SettingsHeader = styled.div`
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    margin-bottom: 3rem;
+  }
 `;
 
 const SettingsTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['4xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   background: ${props => props.theme.gradients.text};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  word-break: break-word;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize['4xl']};
+    margin-bottom: 1rem;
+  }
 `;
 
 const SettingsSubtitle = styled.p`
   color: ${props => props.theme.colors.textSecondary};
-  font-size: ${props => props.theme.fontSize.lg};
-  margin-bottom: 2rem;
+  font-size: ${props => props.theme.fontSize.sm};
+  margin-bottom: 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize.lg};
+    margin-bottom: 2rem;
+  }
 `;
 
 const SettingsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 2rem;
-  
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
   }
 `;
 
@@ -62,8 +93,12 @@ const SettingsSidebar = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 1.5rem;
+  padding: 1rem;
   height: fit-content;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
 `;
 
 const SidebarTitle = styled.h3`
@@ -104,7 +139,15 @@ const SettingsContent = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 2rem;
+  padding: 1rem;
+  min-width: 0;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const SectionTitle = styled.h2`
@@ -433,7 +476,8 @@ const Settings = () => {
     { id: 'preferences', label: 'Preferences', icon: <SettingsIcon size={18} /> },
     { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> },
     { id: 'privacy', label: 'Privacy', icon: <Shield size={18} /> },
-    { id: 'appearance', label: 'Appearance', icon: <Palette size={18} /> }
+    { id: 'appearance', label: 'Appearance', icon: <Palette size={18} /> },
+    ...(subscriptionEnabled ? [{ id: 'subscription', label: 'Subscription', icon: <Crown size={18} /> }] : [])
   ];
 
   return (
@@ -680,6 +724,16 @@ const Settings = () => {
                   Dark mode
                 </CheckboxItem>
               </FormGroup>
+            </>
+          )}
+
+          {activeSection === 'subscription' && subscriptionEnabled && (
+            <>
+              <SectionTitle>
+                <Crown size={24} />
+                Subscription
+              </SectionTitle>
+              <SubscriptionSettings />
             </>
           )}
 

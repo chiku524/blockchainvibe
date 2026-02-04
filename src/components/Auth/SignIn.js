@@ -20,28 +20,45 @@ import AnimatedBackground from '../AnimatedBackground';
 
 const AuthContainer = styled.div`
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, 
     ${props => props.theme.colors.primary}10 0%, 
     ${props => props.theme.colors.secondary}10 100%);
-  padding: 2rem;
+  padding: 1rem;
   position: relative;
   z-index: 2;
   isolation: isolate;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 2rem;
+  }
 `;
 
 const AuthCard = styled(motion.div)`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.xl};
-  padding: 3rem;
+  padding: 1.5rem;
   width: 100%;
   max-width: 400px;
   box-shadow: ${props => props.theme.shadows['2xl']};
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 2rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 3rem;
+  }
 `;
 
 const BackButton = styled.button`
@@ -63,19 +80,31 @@ const BackButton = styled.button`
 
 const AuthHeader = styled.div`
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    margin-bottom: 2rem;
+  }
 `;
 
 const AuthTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['2xl']};
+  font-size: ${props => props.theme.fontSize.xl};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.text};
   margin-bottom: 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize['2xl']};
+  }
 `;
 
 const AuthSubtitle = styled.p`
   color: ${props => props.theme.colors.textSecondary};
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.sm};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.lg};
+  }
 `;
 
 const AuthForm = styled.form`

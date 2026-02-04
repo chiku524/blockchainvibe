@@ -27,6 +27,7 @@ const LandingContainer = styled.div`
 
 const HeroSection = styled.section`
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -34,7 +35,14 @@ const HeroSection = styled.section`
     ${props => props.theme.colors.primary}10 0%, 
     ${props => props.theme.colors.secondary}10 100%);
   position: relative;
-  padding-top: 80px; /* Add space for fixed navbar */
+  padding-top: 72px;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding-top: 80px;
+  }
   
   &::before {
     content: '';
@@ -51,10 +59,19 @@ const HeroSection = styled.section`
 const HeroContent = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   text-align: center;
   position: relative;
   z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 2rem;
+  }
 `;
 
 const HeroTitle = styled(motion.h1)`
@@ -90,16 +107,21 @@ const PrimaryButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.25rem;
   background: ${props => props.theme.gradients.primary};
   color: ${props => props.theme.colors.textInverse};
   border: none;
   border-radius: ${props => props.theme.borderRadius.lg};
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.sm};
   font-weight: ${props => props.theme.fontWeight.semibold};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.normal};
   box-shadow: ${props => props.theme.shadows.lg};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 1rem 2rem;
+    font-size: ${props => props.theme.fontSize.lg};
+  }
   
   &:hover {
     transform: translateY(-2px);
@@ -115,15 +137,20 @@ const SecondaryButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.25rem;
   background: transparent;
   color: ${props => props.theme.colors.text};
   border: 2px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.sm};
   font-weight: ${props => props.theme.fontWeight.semibold};
   cursor: pointer;
   transition: all ${props => props.theme.transitions.normal};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 1rem 2rem;
+    font-size: ${props => props.theme.fontSize.lg};
+  }
   
   &:hover {
     background: ${props => props.theme.colors.surfaceHover};
@@ -132,33 +159,21 @@ const SecondaryButton = styled.button`
   }
 `;
 
-const DemoVideo = styled(motion.div)`
-  position: relative;
-  max-width: 800px;
-  margin: 0 auto;
-  border-radius: ${props => props.theme.borderRadius.xl};
-  overflow: hidden;
-  box-shadow: ${props => props.theme.shadows['2xl']};
-  background: ${props => props.theme.colors.surface};
-  border: 1px solid ${props => props.theme.colors.border};
-`;
-
-const VideoIframe = styled.iframe`
-  width: 100%;
-  aspect-ratio: 16/9;
-  border: none;
-  min-height: 450px;
-  
-  /* Ensure proper loading */
-  loading: lazy;
-`;
-
 const FeaturesSection = styled.section`
-  padding: 6rem 2rem;
+  padding: 3rem 1rem;
   background: ${props => props.theme.colors.surface};
-  margin-top: 2rem;
+  margin-top: 1rem;
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 4rem 1.5rem;
+    margin-top: 2rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 6rem 2rem;
+  }
 `;
 
 const FeaturesContainer = styled.div`
@@ -167,37 +182,70 @@ const FeaturesContainer = styled.div`
 `;
 
 const SectionTitle = styled(motion.h2)`
-  font-size: ${props => props.theme.fontSize['4xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: ${props => props.theme.colors.text};
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize['4xl']};
+    margin-bottom: 1rem;
+  }
 `;
 
 const SectionSubtitle = styled.p`
-  font-size: ${props => props.theme.fontSize.xl};
+  font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.textSecondary};
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  padding: 0 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.lg};
+    margin-bottom: 3rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize.xl};
+    margin-bottom: 4rem;
+  }
 `;
 
 const FeaturesGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-bottom: 4rem;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+  }
 `;
 
 const FeatureCard = styled(motion.div)`
   background: ${props => props.theme.colors.background};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 2rem;
+  padding: 1.25rem;
   text-align: center;
   transition: all ${props => props.theme.transitions.normal};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 2rem;
+  }
   
   &:hover {
     transform: translateY(-4px);
@@ -207,36 +255,61 @@ const FeatureCard = styled(motion.div)`
 `;
 
 const FeatureIcon = styled.div`
-  width: 80px;
-  height: 80px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: ${props => props.theme.gradients.primary};
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem auto;
+  margin: 0 auto 1rem auto;
   color: ${props => props.theme.colors.textInverse};
-  font-size: 2rem;
+  font-size: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+  }
 `;
 
 const FeatureTitle = styled.h3`
-  font-size: ${props => props.theme.fontSize.xl};
+  font-size: ${props => props.theme.fontSize.lg};
   font-weight: ${props => props.theme.fontWeight.bold};
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   color: ${props => props.theme.colors.text};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.xl};
+    margin-bottom: 1rem;
+  }
 `;
 
 const FeatureDescription = styled.p`
   color: ${props => props.theme.colors.textSecondary};
   line-height: 1.6;
+  font-size: ${props => props.theme.fontSize.sm};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: inherit;
+  }
 `;
 
 const CTASection = styled.section`
-  padding: 6rem 2rem;
+  padding: 3rem 1rem;
   background: ${props => props.theme.colors.surface};
   text-align: center;
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 4rem 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 6rem 2rem;
+  }
 `;
 
 const CTAContainer = styled.div`
@@ -245,48 +318,89 @@ const CTAContainer = styled.div`
 `;
 
 const CTATitle = styled.h2`
-  font-size: ${props => props.theme.fontSize['3xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: ${props => props.theme.colors.text};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+    margin-bottom: 1rem;
+  }
 `;
 
 const CTADescription = styled.p`
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.textSecondary};
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.lg};
+    margin-bottom: 2rem;
+  }
 `;
 
 
 // Pricing Section Styles
 const PricingSection = styled.section`
-  padding: 6rem 0;
+  padding: 3rem 0;
   background: ${props => props.theme.colors.background};
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 4rem 0;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 6rem 0;
+  }
 `;
 
 const PricingContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1rem;
   text-align: center;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 0 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 0 2rem;
+  }
 `;
 
 const PricingGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 4rem;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-top: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 4rem;
+  }
 `;
 
 const PricingCard = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.xl};
-  padding: 2rem;
+  padding: 1.25rem;
   position: relative;
   transition: all ${props => props.theme.transitions.normal};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 2rem;
+  }
   
   ${props => props.featured && `
     border-color: ${props.theme.colors.primary};
@@ -376,27 +490,45 @@ const PricingButton = styled.button`
 
 // About Section Styles
 const AboutSection = styled.section`
-  padding: 6rem 0;
+  padding: 3rem 0;
   background: ${props => props.theme.colors.surface};
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 4rem 0;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 6rem 0;
+  }
 `;
 
 const AboutContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 0 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 0 2rem;
+  }
 `;
 
 const AboutContent = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
   align-items: center;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    grid-template-columns: 1fr 1fr;
     gap: 2rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    gap: 4rem;
   }
 `;
 
@@ -439,28 +571,48 @@ const AboutStat = styled(motion.div)`
 
 // Contact Section Styles
 const ContactSection = styled.section`
-  padding: 6rem 0;
+  padding: 3rem 0;
   background: ${props => props.theme.colors.background};
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 4rem 0;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 6rem 0;
+  }
 `;
 
 const ContactContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1rem;
   text-align: center;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 0 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 0 2rem;
+  }
 `;
 
 const ContactContent = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  margin-top: 4rem;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    grid-template-columns: 1fr 1fr;
     gap: 2rem;
+    margin-top: 3rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    gap: 4rem;
+    margin-top: 4rem;
   }
 `;
 
@@ -641,21 +793,6 @@ const LandingPage = ({ theme, onThemeChange }) => {
               Sign In
             </SecondaryButton>
           </CTAButtons>
-          
-          <DemoVideo
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            <VideoIframe
-              src="https://www.youtube.com/embed/9MMPRB8rj-0?rel=0&modestbranding=1&enablejsapi=1&origin=https://blockchainvibe.news"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              referrerPolicy="strict-origin-when-cross-origin"
-              title="BlockchainVibe Demo Video"
-            />
-          </DemoVideo>
         </HeroContent>
       </HeroSection>
 

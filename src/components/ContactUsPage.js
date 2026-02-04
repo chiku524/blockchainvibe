@@ -18,41 +18,75 @@ const PageContainer = styled.div`
 const ContentContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 8rem 2rem 4rem 2rem;
+  padding: 5rem 1rem 3rem;
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 6rem 1.5rem 4rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 8rem 2rem 4rem;
+  }
 `;
 
 const Hero = styled.div`
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    margin-bottom: 4rem;
+  }
 `;
 
 const HeroTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['5xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   background: ${props => props.theme.gradients.text};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['4xl']};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize['5xl']};
+    margin-bottom: 1rem;
+  }
 `;
 
 const HeroSubtitle = styled.p`
-  font-size: ${props => props.theme.fontSize.xl};
+  font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.textSecondary};
   max-width: 600px;
   margin: 0 auto;
+  padding: 0 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.lg};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize.xl};
+  }
 `;
 
 const ContentGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
-  margin-bottom: 4rem;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    gap: 3rem;
+    margin-bottom: 4rem;
   }
 `;
 
@@ -60,17 +94,26 @@ const ContactCard = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 2rem;
+  padding: 1.25rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 2rem;
+  }
 `;
 
 const ContactType = styled.h3`
-  font-size: ${props => props.theme.fontSize.xl};
+  font-size: ${props => props.theme.fontSize.lg};
   font-weight: ${props => props.theme.fontWeight.semibold};
   color: ${props => props.theme.colors.text};
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.xl};
+    margin-bottom: 1rem;
+  }
 `;
 
 const ContactInfo = styled.div`

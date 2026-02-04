@@ -11,6 +11,8 @@ const LayoutContainer = styled.div`
   flex-direction: column;
   min-height: 100vh;
   position: relative;
+  overflow-x: hidden;
+  width: 100%;
 `;
 
 const SkipToContent = styled.a`
@@ -38,21 +40,33 @@ const SkipToContent = styled.a`
 const ContentWrapper = styled.div`
   display: flex;
   flex: 1;
+  min-height: 0;
+`;
+
+const MainAndFooterWrap = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin-left: ${props => (props.sidebarCollapsed ? '80px' : props.theme.layout.sidebarWidth)};
+  transition: margin-left ${props => props.theme.transitions.normal};
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+
+  @media (max-width: ${props => props.theme.breakpoints.lg}) {
+    margin-left: 0;
+    width: 100%;
+  }
 `;
 
 const MainContent = styled.main`
   flex: 1;
-  margin-left: ${props => props.sidebarCollapsed ? '80px' : props.theme.layout.sidebarWidth};
   padding: 0;
   overflow-x: hidden;
   position: relative;
   z-index: 2;
   background: transparent;
-  transition: margin-left ${props => props.theme.transitions.normal};
-  
-  @media (max-width: ${props => props.theme.breakpoints.lg}) {
-    margin-left: 0;
-  }
 `;
 
 const Layout = ({ children, showSidebar = true }) => {
@@ -73,18 +87,19 @@ const Layout = ({ children, showSidebar = true }) => {
       <AnimatedBackground />
       <ContentWrapper>
         {showSidebar && <Sidebar />}
-        <MainContent
-          id="main-content"
-          ref={mainRef}
-          tabIndex={-1}
-          sidebarCollapsed={collapsed}
-          aria-label="Main content"
-        >
-          <SubscriptionBanner />
-          {children}
-        </MainContent>
+        <MainAndFooterWrap sidebarCollapsed={collapsed}>
+          <MainContent
+            id="main-content"
+            ref={mainRef}
+            tabIndex={-1}
+            aria-label="Main content"
+          >
+            <SubscriptionBanner />
+            {children}
+          </MainContent>
+          <Footer />
+        </MainAndFooterWrap>
       </ContentWrapper>
-      <Footer />
     </LayoutContainer>
   );
 };

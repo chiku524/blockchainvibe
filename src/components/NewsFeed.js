@@ -19,43 +19,67 @@ import { getErrorMessage } from '../utils/errorHandler';
 const FeedContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   min-height: 100vh;
   position: relative;
   z-index: 2;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const FeedHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
   background: ${props => props.theme.colors.surface};
   border-radius: ${props => props.theme.borderRadius.lg};
   border: 1px solid ${props => props.theme.colors.border};
-  
-  @media (max-width: 768px) {
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
     flex-direction: column;
-    gap: 1rem;
     align-items: stretch;
+    margin-bottom: 1rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
   }
 `;
 
 const FeedTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['3xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   background: ${props => props.theme.gradients.text};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
+  word-break: break-word;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
 `;
 
 const FeedSubtitle = styled.p`
   color: ${props => props.theme.colors.textSecondary};
   margin: 0.5rem 0 0 0;
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.sm};
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize.lg};
+  }
 `;
 
 const FeedControls = styled.div`
@@ -99,15 +123,22 @@ const ControlButton = styled.button`
 `;
 
 const FilterBar = styled.div`
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    gap: 1rem;
+  }
 `;
 
 const SelectGroup = styled.div`

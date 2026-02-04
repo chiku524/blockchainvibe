@@ -5,16 +5,24 @@ import socialAuthService from '../../services/socialAuth';
 
 const CallbackContainer = styled.div`
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: ${props => props.theme.colors.background};
   color: ${props => props.theme.colors.text};
+  padding: 1rem;
+  box-sizing: border-box;
 `;
 
 const CallbackContent = styled.div`
   text-align: center;
-  padding: 2rem;
+  padding: 1rem;
+  max-width: 100%;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 2rem;
+  }
 `;
 
 const Spinner = styled.div`
@@ -29,8 +37,13 @@ const Spinner = styled.div`
 `;
 
 const CallbackText = styled.p`
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.textSecondary};
+  margin: 0;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.lg};
+  }
 `;
 
 const OAuthCallback = () => {

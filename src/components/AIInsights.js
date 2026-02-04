@@ -18,18 +18,31 @@ import LoadingSpinner from './LoadingSpinner';
 const PageContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   min-height: 100vh;
   position: relative;
   z-index: 2;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${(p) => p.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const PageHeader = styled.div`
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.lg}) {
+    margin-bottom: 2rem;
+  }
 `;
 
 const PageTitle = styled.h1`
-  font-size: ${(p) => p.theme.fontSize['4xl']};
+  font-size: ${(p) => p.theme.fontSize['2xl']};
   font-weight: ${(p) => p.theme.fontWeight.bold};
   background: ${(p) => p.theme.gradients.text};
   -webkit-background-clip: text;
@@ -39,21 +52,36 @@ const PageTitle = styled.h1`
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  word-break: break-word;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.md}) {
+    font-size: ${(p) => p.theme.fontSize['3xl']};
+  }
+  @media (min-width: ${(p) => p.theme.breakpoints.lg}) {
+    font-size: ${(p) => p.theme.fontSize['4xl']};
+  }
 `;
 
 const PageSubtitle = styled.p`
   color: ${(p) => p.theme.colors.textSecondary};
   margin: 0.5rem 0 0 0;
-  font-size: ${(p) => p.theme.fontSize.lg};
+  font-size: ${(p) => p.theme.fontSize.sm};
+
+  @media (min-width: ${(p) => p.theme.breakpoints.md}) {
+    font-size: ${(p) => p.theme.fontSize.lg};
+  }
 `;
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.lg}) {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
   }
 `;
 
@@ -61,7 +89,12 @@ const Card = styled.div`
   background: ${(p) => p.theme.colors.surface};
   border: 1px solid ${(p) => p.theme.colors.border};
   border-radius: ${(p) => p.theme.borderRadius.lg};
-  padding: 1.5rem;
+  padding: 1rem;
+  min-width: 0;
+
+  @media (min-width: ${(p) => p.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
 `;
 
 const CardTitle = styled.h2`

@@ -24,7 +24,12 @@ const ModalOverlay = styled(motion.div)`
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: 0.75rem;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 1rem;
+  }
 `;
 
 const ModalContainer = styled(motion.div)`
@@ -33,27 +38,40 @@ const ModalContainer = styled(motion.div)`
   border-radius: ${props => props.theme.borderRadius.xl};
   width: 100%;
   max-width: 600px;
-  max-height: 90vh;
+  max-height: 85vh;
+  max-height: 85dvh;
   overflow-y: auto;
   position: relative;
+  box-sizing: border-box;
 `;
 
 const ModalHeader = styled.div`
-  padding: 2rem 2rem 1rem 2rem;
+  padding: 1rem 1rem 0.75rem;
   border-bottom: 1px solid ${props => props.theme.colors.border};
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 1.5rem 2rem 1rem;
+  }
 `;
 
 const ModalTitle = styled.h2`
-  font-size: ${props => props.theme.fontSize.xl};
+  font-size: ${props => props.theme.fontSize.lg};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.text};
   margin: 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  word-break: break-word;
+  min-width: 0;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.xl};
+  }
 `;
 
 const CloseButton = styled.button`
@@ -72,7 +90,11 @@ const CloseButton = styled.button`
 `;
 
 const ModalContent = styled.div`
-  padding: 2rem;
+  padding: 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 2rem;
+  }
 `;
 
 const Form = styled.form`

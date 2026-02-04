@@ -19,35 +19,51 @@ import { newsAPI } from '../services/api';
 const TrendingContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   min-height: 100vh;
   position: relative;
   z-index: 2;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const TrendingHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem;
-  padding: 2rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
   background: ${props => props.theme.colors.surface};
   border-radius: ${props => props.theme.borderRadius.lg};
   border: 1px solid ${props => props.theme.colors.border};
-  
-  @media (max-width: 768px) {
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
     flex-direction: column;
-    gap: 1rem;
     align-items: stretch;
+    margin-bottom: 1rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+    margin-bottom: 2rem;
   }
 `;
 
 const HeaderContent = styled.div`
   flex: 1;
+  min-width: 0;
 `;
 
 const TrendingTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['4xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   background: ${props => props.theme.gradients.text};
   -webkit-background-clip: text;
@@ -56,13 +72,25 @@ const TrendingTitle = styled.h1`
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  word-break: break-word;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize['4xl']};
+  }
 `;
 
 const TrendingSubtitle = styled.p`
   color: ${props => props.theme.colors.textSecondary};
   margin: 0.5rem 0 0 0;
-  font-size: ${props => props.theme.fontSize.lg};
+  font-size: ${props => props.theme.fontSize.sm};
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize.lg};
+  }
 `;
 
 const FilterControls = styled.div`
@@ -122,9 +150,15 @@ const Select = styled.select`
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
 `;
 
 const StatCard = styled.div`

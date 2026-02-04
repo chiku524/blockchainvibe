@@ -19,47 +19,86 @@ const PageContainer = styled.div`
 const ContentContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 8rem 2rem 4rem 2rem;
+  padding: 5rem 1rem 3rem;
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 6rem 1.5rem 4rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 8rem 2rem 4rem;
+  }
 `;
 
 const Hero = styled.div`
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    margin-bottom: 4rem;
+  }
 `;
 
 const HeroTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['5xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   background: ${props => props.theme.gradients.text};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['4xl']};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize['5xl']};
+    margin-bottom: 1rem;
+  }
 `;
 
 const HeroSubtitle = styled.p`
-  font-size: ${props => props.theme.fontSize.xl};
+  font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.textSecondary};
   max-width: 600px;
   margin: 0 auto;
+  padding: 0 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    font-size: ${props => props.theme.fontSize.lg};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize.xl};
+  }
 `;
 
 const SearchBar = styled.div`
   max-width: 600px;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   position: relative;
+  padding: 0 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    margin: 2rem auto;
+  }
 `;
 
 const SearchInput = styled.input`
   width: 100%;
-  padding: 1rem 3rem 1rem 1rem;
+  padding: 0.75rem 2.75rem 0.75rem 0.75rem;
   border: 2px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
   background: ${props => props.theme.colors.surface};
   color: ${props => props.theme.colors.text};
-  font-size: ${props => props.theme.fontSize.md};
+  font-size: ${props => props.theme.fontSize.sm};
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 1rem 3rem 1rem 1rem;
+    font-size: ${props => props.theme.fontSize.md};
+  }
   
   &:focus {
     outline: none;
@@ -69,29 +108,48 @@ const SearchInput = styled.input`
 
 const SearchIcon = styled(Search)`
   position: absolute;
-  right: 1rem;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
   color: ${props => props.theme.colors.textSecondary};
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    right: 1rem;
+  }
 `;
 
 const QuickLinks = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-bottom: 4rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+  }
 `;
 
 const QuickLinkCard = styled(Link)`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 2rem;
+  padding: 1.25rem;
   text-decoration: none;
   transition: all ${props => props.theme.transitions.normal};
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    padding: 2rem;
+    gap: 1rem;
+  }
   
   &:hover {
     transform: translateY(-4px);

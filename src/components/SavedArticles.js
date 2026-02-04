@@ -17,49 +17,85 @@ import { userAPI } from '../services/api';
 const SavedContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const SavedHeader = styled.div`
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    margin-bottom: 3rem;
+  }
 `;
 
 const SavedTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['4xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   background: ${props => props.theme.gradients.text};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  word-break: break-word;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize['4xl']};
+    margin-bottom: 1rem;
+  }
 `;
 
 const SavedSubtitle = styled.p`
   color: ${props => props.theme.colors.textSecondary};
-  font-size: ${props => props.theme.fontSize.lg};
-  margin-bottom: 2rem;
+  font-size: ${props => props.theme.fontSize.sm};
+  margin-bottom: 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize.lg};
+    margin-bottom: 2rem;
+  }
 `;
 
 const ControlsContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   gap: 1rem;
-  
-  @media (max-width: 768px) {
+  flex-wrap: wrap;
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
     flex-direction: column;
     align-items: stretch;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    margin-bottom: 2rem;
   }
 `;
 
 const SearchContainer = styled.div`
   position: relative;
   flex: 1;
+  min-width: 0;
   max-width: 400px;
+
+  @media (max-width: ${props => props.theme.breakpoints.md}) {
+    max-width: none;
+  }
 `;
 
 const SearchInput = styled.input`
@@ -157,13 +193,16 @@ const StatLabel = styled.div`
 
 const ArticlesGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
   margin-bottom: 2rem;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   }
 `;
 

@@ -17,27 +17,49 @@ import api from '../services/api';
 const ProfileContainer = styled.div`
   max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const ProfileHeader = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  padding: 2rem;
-  margin-bottom: 2rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
   text-align: center;
   position: relative;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 2rem;
+  }
 `;
 
 const BannerImage = styled.div`
   width: 100%;
-  height: 200px;
+  height: 140px;
   background: ${props => props.imageUrl ? `url(${props.imageUrl})` : props.theme.gradients.primary};
   background-size: cover;
   background-position: center;
   border-radius: ${props => props.theme.borderRadius.lg};
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    height: 200px;
+    margin-bottom: 2rem;
+  }
 `;
 
 const Avatar = styled.div`
@@ -61,10 +83,15 @@ const Avatar = styled.div`
 `;
 
 const UserName = styled.h1`
-  font-size: ${props => props.theme.fontSize['3xl']};
+  font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.text};
   margin: 0 0 0.5rem 0;
+  word-break: break-word;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    font-size: ${props => props.theme.fontSize['3xl']};
+  }
 `;
 
 const UserEmail = styled.p`
@@ -114,9 +141,15 @@ const InfoItem = styled.div`
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
 `;
 
 const StatCard = styled.div`

@@ -40,6 +40,7 @@ If you're unable to disconnect the old repository, create a new Cloudflare Pages
 3. **Set Environment Variables**:
    - Add all your `REACT_APP_*` environment variables
    - Set `REACT_APP_API_URL` to your Worker URL
+   - Optional: Subscription is built but disabled by default. See [SUBSCRIPTION.md](./SUBSCRIPTION.md) to enable it later.
 
 4. **Deploy**:
    - Click "Save and Deploy"
