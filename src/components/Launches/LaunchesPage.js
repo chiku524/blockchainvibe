@@ -7,8 +7,6 @@ import {
   Image as ImageIcon,
   RefreshCw,
   ExternalLink,
-  Calendar,
-  ChevronRight,
 } from 'lucide-react';
 import { launchesAPI } from '../../services/api';
 import LoadingSpinner from '../LoadingSpinner';
