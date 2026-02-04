@@ -4,7 +4,8 @@ import {
   TrendingUp, 
   RefreshCw, 
   Search,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
@@ -15,6 +16,7 @@ import NewsCardSkeleton from '../NewsCardSkeleton';
 import ProfileCompletionModal from '../Auth/ProfileCompletionModal';
 import { newsAPI } from '../../services/api';
 import { handleApiError } from '../../utils/errorHandler';
+import { useAIInsights } from '../../hooks/useAI';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
@@ -266,6 +268,8 @@ const DashboardContent = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [user, setUser] = useState(null);
   const [analytics, setAnalytics] = useState({ articlesRead: 0, timeSpentMinutes: 0 });
+  const { data: insightsData } = useAIInsights();
+  const aiInsights = insightsData?.insights || [];
 
   // Check if profile completion is needed
   useEffect(() => {
@@ -521,6 +525,38 @@ const DashboardContent = () => {
                 <span style={{ color: '#8b5cf6' }}>2.5h today</span>
               </div>
             </div>
+          </SidebarCard>
+
+          <SidebarCard>
+            <SidebarTitle style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Sparkles size={18} />
+              AI Insights
+            </SidebarTitle>
+            {aiInsights.length > 0 ? (
+              <>
+                <TrendingList>
+                  {aiInsights.slice(0, 3).map((item, index) => (
+                    <TrendingItem key={index}>
+                      <TrendingText>{item.text}</TrendingText>
+                    </TrendingItem>
+                  ))}
+                </TrendingList>
+                <ViewAllButton onClick={() => navigate('/ai-insights')} style={{ marginTop: '0.75rem' }}>
+                  View all & ask AI
+                  <ChevronRight size={16} />
+                </ViewAllButton>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
+                  Read articles to get personalized AI insights and daily digest.
+                </p>
+                <ViewAllButton onClick={() => navigate('/ai-insights')} style={{ marginTop: '0.75rem' }}>
+                  Open AI Insights
+                  <ChevronRight size={16} />
+                </ViewAllButton>
+              </>
+            )}
           </SidebarCard>
         </Sidebar>
       </ContentGrid>

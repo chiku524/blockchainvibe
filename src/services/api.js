@@ -185,4 +185,49 @@ export const mettaAPI = {
   },
 };
 
+export const subscriptionAPI = {
+  getSubscription: async (userId) => {
+    const response = await api.get(`/api/subscription?userId=${encodeURIComponent(userId)}`);
+    return response.data;
+  },
+
+  updateSubscription: async (userId, plan) => {
+    const response = await api.post('/api/subscription', { user_id: userId, plan });
+    return response.data;
+  },
+};
+
+export const aiAPI = {
+  getInsights: async (userId) => {
+    const response = await api.get(`/api/ai/insights?userId=${encodeURIComponent(userId)}`);
+    return response.data;
+  },
+
+  getDailyDigest: async (userId = null) => {
+    const params = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    const response = await api.get(`/api/ai/daily-digest${params}`);
+    return response.data;
+  },
+
+  ask: async (query, userId = null) => {
+    const response = await api.post('/api/ai/ask', { query, userId });
+    return response.data;
+  },
+
+  sendChatMessage: async (message) => {
+    const response = await api.post('/api/chat/message', message);
+    return response.data;
+  },
+
+  getAgents: async () => {
+    const response = await api.get('/api/agents');
+    return response.data;
+  },
+
+  getMeTTaStatus: async () => {
+    const response = await api.get('/api/metta/status');
+    return response.data;
+  },
+};
+
 export default api;

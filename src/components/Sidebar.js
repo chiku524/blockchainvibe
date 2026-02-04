@@ -206,7 +206,7 @@ const Sidebar = () => {
         </MenuSection>
 
         <MenuSection>
-          {!collapsed && <SectionTitle collapsed={collapsed}>Analytics</SectionTitle>}
+          {!collapsed && <SectionTitle collapsed={collapsed}>Analytics & AI</SectionTitle>}
           <MenuItem 
             collapsed={collapsed}
             className={isActive('/analytics') ? 'active' : ''}
@@ -214,6 +214,14 @@ const Sidebar = () => {
             title="Analytics">
             <BarChart3 size={18} />
             {!collapsed && 'Analytics'}
+          </MenuItem>
+          <MenuItem 
+            collapsed={collapsed}
+            className={isActive('/ai-insights') ? 'active' : ''}
+            onClick={() => navigate('/ai-insights')} 
+            title="AI Insights">
+            <Sparkles size={18} />
+            {!collapsed && 'AI Insights'}
           </MenuItem>
         </MenuSection>
 

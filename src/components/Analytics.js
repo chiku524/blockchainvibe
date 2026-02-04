@@ -204,9 +204,28 @@ const CategoryPercentage = styled.div`
   color: ${props => props.theme.colors.textSecondary};
 `;
 
+const defaultTrendSeries = () => {
+  const series = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    series.push({ label: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), value: 0, category: 'reading' });
+  }
+  return series;
+};
+
 const Analytics = () => {
   const { isLoading } = useUser();
-  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsData, setAnalyticsData] = useState({
+    articlesRead: 0,
+    timeSpent: 0,
+    averageRelevance: 0,
+    topCategories: [],
+    aiInsights: [],
+    readingTrends: { thisWeek: 0, lastWeek: 0, change: 0 },
+    relevanceScore: { current: 0, previous: 0, change: 0 },
+    _trendSeries: defaultTrendSeries(),
+  });
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -214,35 +233,41 @@ const Analytics = () => {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const userId = user?.user_id || user?.id;
         if (!userId) {
-          setAnalyticsData({
-            articlesRead: 0,
-            timeSpent: 0,
-            averageRelevance: 0,
-            topCategories: [],
-            aiInsights: [],
-            readingTrends: { thisWeek: 0, lastWeek: 0, change: 0 },
-            relevanceScore: { current: 0, previous: 0, change: 0 },
-          });
+          setAnalyticsData(prev => ({ ...prev, articlesRead: 0, timeSpent: 0, topCategories: [], aiInsights: [], _trendSeries: defaultTrendSeries() }));
           return;
         }
         const res = await api.get(`/api/analytics/summary?userId=${encodeURIComponent(userId)}`);
         const data = res.data || {};
-        // Fetch insights in parallel
+        // Fetch AI insights in parallel (same API as AI Insights page)
         let insights = [];
         try {
-          const ins = await api.get(`/api/ai/insights?userId=${encodeURIComponent(userId)}`);
-          insights = ins.data?.insights || [];
+          const insRes = await api.get(`/api/ai/insights?userId=${encodeURIComponent(userId)}`);
+          const insBody = insRes.data;
+          insights = Array.isArray(insBody?.insights) ? insBody.insights : [];
         } catch (_) {}
-        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        const trendMap = { Mon:0, Tue:0, Wed:0, Thu:0, Fri:0, Sat:0, Sun:0 };
+        // Build last 7 days (including today) for chart: backend returns { date, cnt } per day with activity
+        const trendByDate = {};
         (data.readingTrendsByDay || []).forEach(r => {
-          const idx = parseInt(r.dow, 10); // 0=Sun
-          const label = days[idx];
-          trendMap[label] = r.cnt;
+          const d = r.date || r.dow;
+          const cnt = r.cnt ?? 0;
+          trendByDate[d] = (trendByDate[d] || 0) + cnt;
         });
-        const thisWeekTotal = Object.values(trendMap).reduce((a,b)=>a+b,0);
-        // We don't have lastWeek here; show change as 0 for now
-        const topCategories = (data.topSources || []).map(s => ({ name: s.source, count: s.cnt, percentage: 0 }));
+        const series = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().slice(0, 10);
+          const label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          series.push({ label, value: trendByDate[dateStr] || 0, category: 'reading' });
+        }
+        const thisWeekTotal = series.reduce((a, b) => a + (b.value || 0), 0);
+        const topSourcesRaw = data.topSources || [];
+        const totalReads = topSourcesRaw.reduce((a, s) => a + (s.cnt || 0), 0);
+        const topCategories = topSourcesRaw.map(s => ({
+          name: s.source || 'Unknown',
+          count: s.cnt || 0,
+          percentage: totalReads > 0 ? Math.round(((s.cnt || 0) / totalReads) * 100) : 0,
+        }));
         setAnalyticsData({
           articlesRead: data.articlesRead || 0,
           timeSpent: data.timeSpentMinutes || 0,
@@ -251,18 +276,10 @@ const Analytics = () => {
           aiInsights: insights,
           readingTrends: { thisWeek: thisWeekTotal, lastWeek: 0, change: 0 },
           relevanceScore: { current: 0, previous: 0, change: 0 },
-          _trendSeries: Object.entries(trendMap).map(([label, value]) => ({ label, value, category: 'reading' })),
+          _trendSeries: series,
         });
       } catch (e) {
-        setAnalyticsData({
-          articlesRead: 0,
-          timeSpent: 0,
-          averageRelevance: 0,
-          topCategories: [],
-          aiInsights: [],
-          readingTrends: { thisWeek: 0, lastWeek: 0, change: 0 },
-          relevanceScore: { current: 0, previous: 0, change: 0 },
-        });
+        setAnalyticsData(prev => ({ ...prev, articlesRead: 0, timeSpent: 0, topCategories: [], aiInsights: [], _trendSeries: defaultTrendSeries() }));
       }
     };
     fetchAnalytics();

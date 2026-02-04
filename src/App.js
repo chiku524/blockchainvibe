@@ -17,6 +17,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Context
 import { ThemeProvider as CustomThemeProvider, useTheme } from './contexts/ThemeContext';
 import { SidebarProvider } from './contexts/SidebarContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { userAPI } from './services/api';
 
 // Lazy load components for better performance
@@ -37,6 +38,7 @@ const DocPage = lazy(() => import('./components/DocPage'));
 const HelpCenter = lazy(() => import('./components/HelpCenter'));
 const ContactUsPage = lazy(() => import('./components/ContactUsPage'));
 const BugReportPage = lazy(() => import('./components/BugReportPage'));
+const AIInsights = lazy(() => import('./components/AIInsights'));
 
 // Enhanced React Query configuration with optimized caching
 const queryClient = new QueryClient({
@@ -168,6 +170,7 @@ const AppContent = () => {
     <ThemeProvider theme={currentTheme}>
       <GlobalStyle />
       <SidebarProvider>
+        <SubscriptionProvider>
         <Router>
           <AppContainer>
             <Routes>
@@ -228,6 +231,13 @@ const AppContent = () => {
               <Layout>
                 <Suspense fallback={<LoadingSpinner message="Loading analytics..." />}>
                   <Analytics />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/ai-insights" element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner message="Loading AI insights..." />}>
+                  <AIInsights />
                 </Suspense>
               </Layout>
             } />
@@ -299,6 +309,7 @@ const AppContent = () => {
             }}
           />
         </Router>
+        </SubscriptionProvider>
       </SidebarProvider>
     </ThemeProvider>
   );

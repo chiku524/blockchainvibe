@@ -67,6 +67,20 @@ class DatabaseService {
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `).run();
+
+      // Subscriptions (on-hold: feature enabled via env.SUBSCRIPTION_ENABLED)
+      await this.db.prepare(`
+        CREATE TABLE IF NOT EXISTS subscriptions (
+          user_id TEXT PRIMARY KEY,
+          plan TEXT NOT NULL DEFAULT 'free',
+          status TEXT NOT NULL DEFAULT 'active',
+          stripe_customer_id TEXT,
+          stripe_subscription_id TEXT,
+          current_period_end DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `).run();
       
       return { success: true };
     } catch (error) {
@@ -112,10 +126,11 @@ class DatabaseService {
         SELECT COALESCE(SUM(duration_ms),0) as ms FROM user_activity WHERE user_id = ?
       `).bind(userId).first();
       const last7 = await this.db.prepare(`
-        SELECT strftime('%w', created_at) as dow, COUNT(*) as cnt
+        SELECT strftime('%Y-%m-%d', created_at) as date, COUNT(*) as cnt
         FROM user_activity
         WHERE user_id = ? AND created_at >= datetime('now','-6 days')
         GROUP BY strftime('%Y-%m-%d', created_at)
+        ORDER BY date ASC
       `).bind(userId).all();
       const topCats = await this.db.prepare(`
         SELECT COALESCE(article_source,'Unknown') as source, COUNT(*) as cnt
@@ -285,6 +300,45 @@ class DatabaseService {
       return { success: true };
     } catch (error) {
       console.error('Database error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async getSubscription(userId) {
+    try {
+      await this.initDatabase();
+      const row = await this.db.prepare(`
+        SELECT plan, status, current_period_end FROM subscriptions WHERE user_id = ?
+      `).bind(userId).first();
+      return {
+        success: true,
+        plan: row?.plan || 'free',
+        status: row?.status || 'active',
+        current_period_end: row?.current_period_end || null
+      };
+    } catch (error) {
+      console.error('Get subscription error:', error);
+      return { success: false, plan: 'free', status: 'active' };
+    }
+  }
+
+  async upsertSubscription(userId, { plan = 'free', status = 'active', stripe_customer_id = null, stripe_subscription_id = null, current_period_end = null }) {
+    try {
+      await this.initDatabase();
+      await this.db.prepare(`
+        INSERT INTO subscriptions (user_id, plan, status, stripe_customer_id, stripe_subscription_id, current_period_end, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(user_id) DO UPDATE SET
+          plan = excluded.plan,
+          status = excluded.status,
+          stripe_customer_id = COALESCE(excluded.stripe_customer_id, stripe_customer_id),
+          stripe_subscription_id = COALESCE(excluded.stripe_subscription_id, stripe_subscription_id),
+          current_period_end = COALESCE(excluded.current_period_end, current_period_end),
+          updated_at = datetime('now')
+      `).bind(userId, plan, status, stripe_customer_id, stripe_subscription_id, current_period_end).run();
+      return { success: true };
+    } catch (error) {
+      console.error('Upsert subscription error:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1579,7 +1633,13 @@ export default {
       if (path === '/api/ai/insights' && method === 'GET') {
         return await handleAIInsights(request, env);
       }
-      
+      if (path === '/api/ai/daily-digest' && method === 'GET') {
+        return await handleAIDailyDigest(request, env);
+      }
+      if (path === '/api/ai/ask' && method === 'POST') {
+        return await handleAIAsk(request, env);
+      }
+
       if (path === '/api/news/trending' && method === 'POST') {
         return await handleTrendingNews(request, env);
       }
@@ -1618,6 +1678,13 @@ export default {
 
       if (path === '/api/user/profile' && method === 'PUT') {
         return await handleUpdateUserProfile(request, env);
+      }
+
+      if (path === '/api/subscription' && method === 'GET') {
+        return await handleGetSubscription(request, env);
+      }
+      if (path === '/api/subscription' && method === 'POST') {
+        return await handleUpdateSubscription(request, env);
       }
 
       // Compatibility routes without /api prefix for existing client
@@ -1864,14 +1931,37 @@ async function handleAIInsights(request, env) {
       LIMIT 1
     `).bind(userId).first();
 
+    const totalReads = await db.db.prepare(`
+      SELECT COUNT(*) as cnt FROM user_activity
+      WHERE user_id = ? AND type = 'read' AND created_at >= datetime('now','-6 days')
+    `).bind(userId).first();
+
+    const recentTitles = await db.db.prepare(`
+      SELECT article_title FROM user_activity
+      WHERE user_id = ? AND type = 'read' AND article_title IS NOT NULL AND article_title != ''
+      ORDER BY created_at DESC LIMIT 20
+    `).bind(userId).all();
+
     const insights = [];
     const top = topSources?.results || [];
     if (top.length > 0) {
       const s = top[0];
-      insights.push({ text: `Most-read source this week: ${s.source} (${s.cnt} reads).`, source: 'D1 user_activity' });
+      insights.push({ type: 'source', text: `Most-read source this week: ${s.source} (${s.cnt} reads).`, source: 'D1 user_activity' });
     }
     if (peakHour && typeof peakHour.hour === 'number') {
-      insights.push({ text: `You typically read around ${peakHour.hour}:00.`, source: 'D1 user_activity' });
+      insights.push({ type: 'pattern', text: `You typically read around ${peakHour.hour}:00.`, source: 'D1 user_activity' });
+    }
+    const total = totalReads?.cnt ?? 0;
+    if (total > 0) {
+      insights.push({ type: 'engagement', text: `You've read ${total} article${total !== 1 ? 's' : ''} in the last 7 days.`, source: 'D1 user_activity' });
+    }
+    if (top.length >= 2) {
+      const second = top[1];
+      insights.push({ type: 'source', text: `${second.source} is also in your top sources (${second.cnt} reads).`, source: 'D1 user_activity' });
+    }
+    // Suggest broadening if they only read one source
+    if (top.length === 1 && top[0].cnt >= 3) {
+      insights.push({ type: 'suggestion', text: 'Try exploring DeFi or Layer 2 topics for more variety.', source: 'AI' });
     }
 
     return new Response(JSON.stringify({ success: true, insights }), {
@@ -1879,6 +1969,106 @@ async function handleAIInsights(request, env) {
     });
   } catch (error) {
     return new Response(JSON.stringify({ success: false, message: 'Failed to generate insights', error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+}
+
+// AI Daily Digest: aggregated themes and top headlines (personalized when userId provided)
+async function handleAIDailyDigest(request, env) {
+  try {
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId');
+    const items = await fetchBlockchainNews(40, { timeFilter: '24h', sortBy: 'relevance' });
+    const byCategory = new Map();
+    const bySource = new Map();
+    const headlines = [];
+    items.forEach((a, i) => {
+      const cats = Array.isArray(a.categories) ? a.categories : ['general'];
+      cats.forEach(c => byCategory.set(c, (byCategory.get(c) || 0) + 1));
+      const src = a.source || 'Unknown';
+      bySource.set(src, (bySource.get(src) || 0) + 1);
+      if (i < 8) headlines.push({ id: a.id, title: a.title, source: a.source, url: a.url, categories: cats });
+    });
+    const themes = Array.from(byCategory.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+    const topSources = Array.from(bySource.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+    const digest = {
+      success: true,
+      date: new Date().toISOString().slice(0, 10),
+      themes,
+      top_headlines: headlines,
+      top_sources: topSources,
+      total_articles: items.length,
+      personalized: !!userId
+    };
+    return new Response(JSON.stringify(digest), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ success: false, message: 'Failed to generate digest', error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+}
+
+// AI Ask: natural-language query over news + insights (authenticated)
+async function handleAIAsk(request, env) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const userId = body.userId || body.user_id;
+    const query = (body.query || body.text || '').trim().toLowerCase();
+    if (!query) {
+      return new Response(JSON.stringify({ success: false, message: 'query is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    const items = await fetchBlockchainNews(30, { timeFilter: '7d', sortBy: 'relevance' });
+    const replyParts = [];
+    if (query.includes('insight') || query.includes('summary') || query.includes('habit') || query.includes('read')) {
+      if (userId) {
+        const url = new URL(request.url);
+        url.pathname = '/api/ai/insights';
+        url.search = `userId=${encodeURIComponent(userId)}`;
+        const resp = await handleAIInsights(new Request(url.toString(), { method: 'GET' }), env);
+        const data = await resp.json();
+        if (data.insights && data.insights.length) {
+          replyParts.push('Your insights: ' + data.insights.map(i => i.text).join(' '));
+        }
+      }
+    }
+    if (query.includes('trend') || query.includes('today') || query.includes('news') || query.includes('defi') || query.includes('bitcoin') || query.includes('ethereum') || query.includes('what')) {
+      const relevant = items.filter(a => {
+        const t = (a.title || '').toLowerCase();
+        const s = (a.summary || '').toLowerCase();
+        return t.includes('defi') || t.includes('bitcoin') || t.includes('ethereum') || s.includes('defi') || s.includes('bitcoin') || s.includes('ethereum') || query.length < 5;
+      }).slice(0, 5);
+      if (relevant.length) {
+        replyParts.push('Top picks from the feed: ' + relevant.map(a => a.title).join(' — '));
+      } else {
+        replyParts.push('Recent headlines: ' + items.slice(0, 5).map(a => a.title).join(' — '));
+      }
+    }
+    if (replyParts.length === 0) {
+      replyParts.push('Recent headlines: ' + items.slice(0, 5).map(a => a.title).join(' — '));
+    }
+    return new Response(JSON.stringify({
+      success: true,
+      reply: replyParts.join('\n\n'),
+      sources: items.slice(0, 5).map(a => ({ title: a.title, url: a.url }))
+    }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ success: false, message: 'Failed to process question', error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });
@@ -2218,6 +2408,81 @@ async function handleMeTTaSearch(request, env) {
     });
   } catch (error) {
     return new Response(JSON.stringify({ success: false, message: 'Failed to search MeTTa', error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+}
+
+// Subscription (on-hold: enable with env.SUBSCRIPTION_ENABLED = 'true')
+const SUBSCRIPTION_PLANS = ['free', 'pro'];
+
+async function handleGetSubscription(request, env) {
+  const enabled = env.SUBSCRIPTION_ENABLED === 'true';
+  if (!enabled) {
+    return new Response(JSON.stringify({ enabled: false, plan: 'free', status: 'active' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+  try {
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId');
+    if (!userId) {
+      return new Response(JSON.stringify({ success: false, message: 'userId is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    const db = new DatabaseService(env.DB);
+    const result = await db.getSubscription(userId);
+    return new Response(JSON.stringify({ enabled: true, ...result }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ success: false, enabled: true, plan: 'free', error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+}
+
+async function handleUpdateSubscription(request, env) {
+  if (env.SUBSCRIPTION_ENABLED !== 'true') {
+    return new Response(JSON.stringify({ enabled: false, message: 'Subscription feature is not enabled' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+  try {
+    const body = await request.json().catch(() => ({}));
+    const userId = body.user_id || body.userId;
+    const plan = (body.plan || 'free').toLowerCase();
+    if (!userId) {
+      return new Response(JSON.stringify({ success: false, message: 'user_id is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    if (!SUBSCRIPTION_PLANS.includes(plan)) {
+      return new Response(JSON.stringify({ success: false, message: 'Invalid plan' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    const db = new DatabaseService(env.DB);
+    const result = await db.upsertSubscription(userId, { plan, status: 'active' });
+    if (!result.success) {
+      return new Response(JSON.stringify({ success: false, message: result.error }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+    return new Response(JSON.stringify({ success: true, plan }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ success: false, message: 'Failed to update subscription', error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });

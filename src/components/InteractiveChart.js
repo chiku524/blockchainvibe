@@ -153,7 +153,8 @@ const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate }) => {
     }
   }, [data]);
 
-  const maxValue = Math.max(...chartData.map(item => item.value), 1);
+  const maxValue = Math.max(...chartData.map(item => (item && typeof item.value === 'number' ? item.value : 0)), 1);
+  const hasData = chartData.some(item => item && (item.value || 0) > 0);
 
   const handleBarClick = (item, index) => {
     if (onDataUpdate) {
@@ -165,7 +166,17 @@ const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate }) => {
     }
   };
 
-  const displayData = chartData;
+  const displayData = Array.isArray(chartData) && chartData.length > 0
+    ? chartData
+    : [
+        { label: 'Sun', value: 0 },
+        { label: 'Mon', value: 0 },
+        { label: 'Tue', value: 0 },
+        { label: 'Wed', value: 0 },
+        { label: 'Thu', value: 0 },
+        { label: 'Fri', value: 0 },
+        { label: 'Sat', value: 0 },
+      ];
 
   return (
     <ChartContainer ref={chartRef}>
@@ -179,25 +190,34 @@ const InteractiveChart = ({ data, title = "Reading Trends", onDataUpdate }) => {
       </ChartHeader>
       
       <ChartArea>
-        {displayData.map((item, index) => (
-          <BarContainer key={index}>
-            <Bar
-              initial={{ height: 0 }}
-              animate={{ height: `${(item.value / maxValue) * 100}%` }}
-              transition={{ 
-                duration: 0.8, 
-                delay: index * 0.1,
-                ease: "easeOut"
-              }}
-              onClick={() => handleBarClick(item, index)}
-              whileHover={{ scaleY: 1.05 }}
-            >
-              <BarValue>{item.value}</BarValue>
-            </Bar>
-            <BarLabel>{item.label}</BarLabel>
-          </BarContainer>
-        ))}
+        {displayData.map((item, index) => {
+          const val = item && typeof item.value === 'number' ? item.value : 0;
+          const label = item && item.label != null ? item.label : '';
+          return (
+            <BarContainer key={`${label}-${index}`}>
+              <Bar
+                initial={{ height: 0 }}
+                animate={{ height: `${(val / maxValue) * 100}%` }}
+                transition={{
+                  duration: 0.8,
+                  delay: index * 0.05,
+                  ease: 'easeOut',
+                }}
+                onClick={() => handleBarClick(item, index)}
+                whileHover={{ scaleY: 1.05 }}
+              >
+                <BarValue>{val}</BarValue>
+              </Bar>
+              <BarLabel>{label}</BarLabel>
+            </BarContainer>
+          );
+        })}
       </ChartArea>
+      {!hasData && displayData.length > 0 && (
+        <LoadingText style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', marginTop: 0 }}>
+          No reading data yet — read articles to see trends
+        </LoadingText>
+      )}
       
       {isLoading && (
         <LoadingOverlay>

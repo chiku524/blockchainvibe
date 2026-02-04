@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, 
@@ -82,6 +83,25 @@ const PersonalizationText = styled.span`
   font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.primary};
   font-weight: ${props => props.theme.fontWeight.medium};
+`;
+
+const AIPoweredBadge = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  background: ${props => props.theme.colors.primary}15;
+  color: ${props => props.theme.colors.primary};
+  border-radius: ${props => props.theme.borderRadius.full};
+  font-size: ${props => props.theme.fontSize.xs};
+  font-weight: ${props => props.theme.fontWeight.medium};
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  &:hover {
+    opacity: 0.9;
+  }
 `;
 
 const FilterControls = styled.div`
@@ -304,6 +324,7 @@ const EmptyStateDescription = styled.p`
 `;
 
 const ForYou = () => {
+  const navigate = useNavigate();
   const [timeFilter, setTimeFilter] = useState('24h');
   const [page, setPage] = useState(1);
   const [allNews, setAllNews] = useState([]);
@@ -438,6 +459,10 @@ const ForYou = () => {
               AI-powered recommendations based on your reading history and preferences
             </PersonalizationText>
           </PersonalizationInfo>
+          <AIPoweredBadge as="button" type="button" onClick={() => navigate('/ai-insights')}>
+            <Sparkles size={12} />
+            Insights & agents
+          </AIPoweredBadge>
         </HeaderContent>
         
         <FilterControls>
