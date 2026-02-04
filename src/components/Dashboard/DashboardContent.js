@@ -14,7 +14,10 @@ import toast from 'react-hot-toast';
 import NewsCard from '../NewsCard';
 import NewsCardSkeleton from '../NewsCardSkeleton';
 import ProfileCompletionModal from '../Auth/ProfileCompletionModal';
-import { newsAPI } from '../../services/api';
+import TrendingCoinsWidget from '../Launches/TrendingCoinsWidget';
+import AirdropsWidget from '../Launches/AirdropsWidget';
+import LaunchesCalendar from '../Launches/LaunchesCalendar';
+import { newsAPI, launchesAPI } from '../../services/api';
 import { handleApiError } from '../../utils/errorHandler';
 import { useAIInsights } from '../../hooks/useAI';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
@@ -265,6 +268,24 @@ const SidebarCard = styled.div`
   padding: 1.5rem;
 `;
 
+const LaunchesWidgetsGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+`;
+
+const LaunchesWidgetWrap = styled.div`
+  min-height: 0;
+`;
+
 const SidebarTitle = styled.h3`
   font-size: ${props => props.theme.fontSize.lg};
   font-weight: ${props => props.theme.fontWeight.semibold};
@@ -370,6 +391,15 @@ const DashboardContent = () => {
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: 10 * 60 * 1000, // 10 minutes
+    }
+  );
+
+  const { data: launchesData } = useQuery(
+    ['launches', 'drops'],
+    () => launchesAPI.getDrops(),
+    {
+      staleTime: 6 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
     }
   );
 
@@ -503,6 +533,33 @@ const DashboardContent = () => {
           <StatLabel>Relevance Score</StatLabel>
         </StatCard>
       </StatsGrid>
+
+      <SectionHeader style={{ marginTop: 0, marginBottom: '1rem' }}>
+        <SectionTitle style={{ margin: 0 }}>Launches & Drops</SectionTitle>
+        <ViewAllButton onClick={() => navigate('/launches')}>
+          View all
+          <ChevronRight size={16} />
+        </ViewAllButton>
+      </SectionHeader>
+      <LaunchesWidgetsGrid>
+        <LaunchesWidgetWrap>
+          <TrendingCoinsWidget
+            coins={launchesData?.trendingCoins ?? []}
+            compact
+            maxItems={5}
+          />
+        </LaunchesWidgetWrap>
+        <LaunchesWidgetWrap>
+          <AirdropsWidget
+            airdrops={launchesData?.airdrops ?? []}
+            compact
+            maxItems={5}
+          />
+        </LaunchesWidgetWrap>
+        <LaunchesWidgetWrap>
+          <LaunchesCalendar events={launchesData?.calendarEvents ?? []} compact />
+        </LaunchesWidgetWrap>
+      </LaunchesWidgetsGrid>
 
       <SectionTitle>
         <TrendingUp size={24} />

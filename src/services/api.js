@@ -118,6 +118,13 @@ export const newsAPI = {
   },
 };
 
+export const launchesAPI = {
+  getDrops: async () => {
+    const response = await api.get('/api/launches/drops');
+    return response.data;
+  },
+};
+
 export const userAPI = {
   getProfile: async () => {
     // Get user from localStorage or use demo user as fallback

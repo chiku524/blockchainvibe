@@ -39,6 +39,7 @@ const HelpCenter = lazy(() => import('./components/HelpCenter'));
 const ContactUsPage = lazy(() => import('./components/ContactUsPage'));
 const BugReportPage = lazy(() => import('./components/BugReportPage'));
 const AIInsights = lazy(() => import('./components/AIInsights'));
+const LaunchesPage = lazy(() => import('./components/Launches/LaunchesPage'));
 
 // Enhanced React Query configuration with optimized caching
 const queryClient = new QueryClient({
@@ -257,6 +258,13 @@ const AppContent = () => {
               <Layout>
                 <Suspense fallback={<LoadingSpinner message="Loading AI insights..." />}>
                   <AIInsights />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/launches" element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner message="Loading launches & drops..." />}>
+                  <LaunchesPage />
                 </Suspense>
               </Layout>
             } />

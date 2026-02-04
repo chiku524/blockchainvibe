@@ -1672,6 +1672,21 @@ export default {
         return await handleCategories(request, env);
       }
 
+      if (path === '/api/launches/drops' && method === 'GET') {
+        const cacheKey = new Request(request.url);
+        const cached = await caches.default.match(cacheKey);
+        if (cached) return cached;
+        const response = await handleLaunchesDrops(request, env);
+        if (response.ok) {
+          const body = await response.arrayBuffer();
+          const headers = new Headers(response.headers);
+          headers.set('Cache-Control', 'public, max-age=480');
+          ctx.waitUntil(caches.default.put(cacheKey, new Response(body, { status: response.status, headers })));
+          return new Response(body, { status: response.status, headers: response.headers });
+        }
+        return response;
+      }
+
       if (path === '/api/user/profile' && method === 'GET') {
         return await handleGetUserProfile(request, env);
       }
@@ -2330,6 +2345,30 @@ async function handleNewsDetail(request, env) {
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Failed to get article', details: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+}
+
+async function handleLaunchesDrops(request, env) {
+  try {
+    const { launchesService } = await import('./launches-service.js');
+    const data = await launchesService.getAll(env);
+    return new Response(JSON.stringify(data), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Failed to get launches and drops',
+      details: error.message,
+      airdrops: [],
+      trendingCoins: [],
+      newTokens: [],
+      nftDrops: [],
+      calendarEvents: [],
+      updatedAt: new Date().toISOString()
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });

@@ -9,7 +9,8 @@ import {
   User, 
   Settings,
   LogOut,
-  Sparkles
+  Sparkles,
+  Gift
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebar } from '../contexts/SidebarContext';
@@ -209,6 +210,14 @@ const Sidebar = () => {
           >
             <IconBox><Newspaper size={18} /></IconBox>
             <MenuLabel collapsed={collapsed}>News Feed</MenuLabel>
+          </MenuItem>
+          <MenuItem
+            className={isActive('/launches') ? 'active' : ''}
+            onClick={() => navigate('/launches')}
+            title="Launches & Drops"
+          >
+            <IconBox><Gift size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Launches & Drops</MenuLabel>
           </MenuItem>
           <MenuItem
             className={isActive('/saved') ? 'active' : ''}

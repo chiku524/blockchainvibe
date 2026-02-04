@@ -521,6 +521,14 @@ export const NEWS_SOURCES = {
       category: "nft",
       priority: 3,
       enabled: true
+    },
+    // Launches & Drops: Airdrops
+    {
+      name: "Airdrop Alert",
+      url: "https://airdropalert.com/feed/rssfeed",
+      category: "airdrop",
+      priority: 2,
+      enabled: true
     }
   ],
 
@@ -710,6 +718,7 @@ export const NEWS_CATEGORIES = {
   "ethereum": "Ethereum", 
   "defi": "DeFi",
   "nft": "NFTs",
+  "airdrop": "Airdrops",
   "layer2": "Layer 2",
   "web3": "Web3",
   "gaming": "Gaming",
@@ -727,6 +736,7 @@ export const CATEGORY_KEYWORDS = {
   "ethereum": ["ethereum", "eth", "ethereum 2.0", "eth2", "beacon chain", "eth merge", "shanghai"],
   "defi": ["defi", "decentralized finance", "yield farming", "liquidity", "uniswap", "compound", "aave", "maker", "curve"],
   "nft": ["nft", "non-fungible token", "opensea", "art", "collectible", "nft marketplace"],
+  "airdrop": ["airdrop", "airdrop campaign", "free tokens", "token distribution", "claim", "snapshot", "ido", "tge", "token generation event", "new listing", "token launch", "nft drop", "mint"],
   "layer2": ["layer 2", "polygon", "arbitrum", "optimism", "rollup", "l2", "zk-rollup", "sidechain"],
   "web3": ["web3", "metaverse", "dapp", "dapps", "blockchain app"],
   "gaming": ["gaming", "play-to-earn", "p2e", "axie", "sandbox", "web3 gaming", "gamefi"],
