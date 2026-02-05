@@ -19,6 +19,27 @@ function extractXMLContent(xml, tag) {
   return (match[1] || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim();
 }
 
+/** Project-backed filter: token has links (website, twitter, etc.) = real project presence */
+function isProjectBackedToken(t) {
+  const hasLinks = t.links && Array.isArray(t.links) && t.links.length > 0;
+  const hasDescription = t.description && t.description.trim().length >= 60;
+  return hasLinks || hasDescription;
+}
+
+/** Project-backed filter: airdrop has meaningful description = vetted/real campaign */
+function isProjectBackedAirdrop(a) {
+  const hasDescription = a.description && a.description.trim().length >= 50;
+  const titleLooksLegit = a.title && a.title.length >= 10 && !/^[A-Z0-9\s!@#$%^&*()]+$/.test(a.title);
+  return hasDescription || titleLooksLegit;
+}
+
+/** Project-backed filter: NFT has meaningful floor price = real demand */
+function isProjectBackedNFT(n) {
+  const floor = n.floor_price_usd;
+  if (floor == null) return true; // keep when no data
+  return Number(floor) >= 0.5;
+}
+
 /** Parse RSS XML to array of items */
 function parseRSSItems(xmlText) {
   const items = xmlText.match(/<item>[\s\S]*?<\/item>/g) || [];
@@ -66,7 +87,8 @@ export class LaunchesService {
       if (!res.ok) return [];
       const text = await res.text();
       const items = parseRSSItems(text);
-      return items.slice(0, limit);
+      const filtered = items.filter(isProjectBackedAirdrop);
+      return filtered.slice(0, limit);
     } catch (e) {
       console.error('LaunchesService fetchAirdrops error:', e);
       return [];
@@ -159,7 +181,8 @@ export class LaunchesService {
           }
         });
       }
-      return out.slice(0, 25);
+      const filtered = out.filter(isProjectBackedToken);
+      return filtered.slice(0, 15);
     } catch (e) {
       console.error('LaunchesService fetchNewTokens error:', e);
       return [];
@@ -175,19 +198,22 @@ export class LaunchesService {
       });
       if (!res.ok) return [];
       const data = await res.json();
-      const nfts = (data.nfts || []).map((n) => {
-        const item = n.item || n;
-        return {
-          id: item.id || item.nft_id,
-          name: item.name,
-          symbol: item.symbol,
-          thumb: item.thumb || item.small,
-          floor_price_native: item.floor_price_native,
-          floor_price_usd: item.floor_price_usd,
-          link: item.id ? `https://www.coingecko.com/en/nft/${item.id}` : null,
-          type: 'nft',
-        };
-      });
+      const nfts = (data.nfts || [])
+        .map((n) => {
+          const item = n.item || n;
+          return {
+            id: item.id || item.nft_id,
+            name: item.name,
+            symbol: item.symbol,
+            thumb: item.thumb || item.small,
+            floor_price_native: item.floor_price_native,
+            floor_price_usd: item.floor_price_usd,
+            link: item.id ? `https://www.coingecko.com/en/nft/${item.id}` : null,
+            type: 'nft',
+          };
+        })
+        .filter(isProjectBackedNFT)
+        .slice(0, 12);
       return nfts;
     } catch (e) {
       console.error('LaunchesService fetchTrendingNFTs error:', e);
