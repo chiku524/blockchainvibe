@@ -42,14 +42,12 @@ export const useNews = (params = {}) => {
     queryFunction,
     {
       enabled: true,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnWindowFocus: false,
-      refetchOnMount: false, // Don't refetch on mount to prevent infinite loops
-      keepPreviousData: true, // Keep previous data while loading new data
+      staleTime: 0, // Always refetch so we don't show stale single-article cache
+      cacheTime: 2 * 60 * 1000, // 2 minutes
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      keepPreviousData: true,
       retry: 2,
-      // Request cancellation is handled automatically by React Query
-      // When component unmounts, queries are automatically cancelled
     }
   );
 };

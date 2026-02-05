@@ -899,6 +899,36 @@ async function fetchBlockchainNews(limit, options = {}) {
       console.log('No RSS news found, falling back to mock data');
       return getMockNews(limit);
     }
+    // If we got very few articles (e.g. only one feed succeeded), merge with mock so feed is usable
+    if (rawNews.length < 8) {
+      const needed = Math.max(0, limit - rawNews.length);
+      const mock = getMockNews(needed);
+      const combined = [...rawNews, ...mock].slice(0, limit);
+      combined.sort((a, b) => (b.published_at && a.published_at) ? (new Date(b.published_at) - new Date(a.published_at)) : 0);
+      console.log(`Few articles (${rawNews.length}); merged with mock to return ${combined.length}`);
+      return combined.map((article, index) => {
+        try {
+          const cleanUrl = (article.url || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
+          const cleanSummary = (article.summary || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
+          const cleanContent = (article.content || article.summary || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
+          return {
+            ...article,
+            id: article.id || `article-${index}-${Date.now()}`,
+            url: cleanUrl,
+            summary: cleanSummary,
+            content: cleanContent,
+            excerpt: (article.summary || '').substring(0, 200),
+            categories: article.categories || ['general'],
+            relevance_score: article.relevance_score || 0.5,
+            knowledge_graph_enhanced: false,
+            uagents_processed: false,
+            processing_timestamp: new Date().toISOString()
+          };
+        } catch (e) {
+          return { ...article, id: article.id || `article-${index}-${Date.now()}`, processing_timestamp: new Date().toISOString() };
+        }
+      });
+    }
     
     // FAST PATH: Return basic processed articles immediately (skip heavy processing)
     // This allows the frontend to show articles quickly while enhancement happens
