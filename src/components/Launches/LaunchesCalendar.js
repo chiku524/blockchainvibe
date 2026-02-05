@@ -118,8 +118,8 @@ const ModalBox = styled.div`
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: ${props => props.theme.borderRadius.lg};
-  max-width: 420px;
-  width: 100%;
+  width: min(560px, calc(100vw - 2rem));
+  max-width: 560px;
   max-height: 80vh;
   overflow: hidden;
   display: flex;
@@ -162,7 +162,9 @@ const ModalCloseBtn = styled.button`
 const ModalBody = styled.div`
   padding: 1rem 1.25rem;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
+  min-width: 0;
 `;
 
 const ModalEventItem = styled.a`
@@ -175,6 +177,7 @@ const ModalEventItem = styled.a`
   text-decoration: none;
   transition: background 0.2s;
   margin-bottom: 0.5rem;
+  min-width: 0;
 
   &:last-child {
     margin-bottom: 0;
@@ -213,6 +216,8 @@ const ModalEventType = styled.span`
 const ModalEventTitle = styled.span`
   font-size: ${props => props.theme.fontSize.sm};
   font-weight: ${props => props.theme.fontWeight.medium};
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 const ModalEventChain = styled.span`

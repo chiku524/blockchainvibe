@@ -1680,7 +1680,7 @@ export default {
         if (response.ok) {
           const body = await response.arrayBuffer();
           const headers = new Headers(response.headers);
-          headers.set('Cache-Control', 'public, max-age=480');
+          headers.set('Cache-Control', 'public, max-age=180');
           ctx.waitUntil(caches.default.put(cacheKey, new Response(body, { status: response.status, headers })));
           return new Response(body, { status: response.status, headers: response.headers });
         }
