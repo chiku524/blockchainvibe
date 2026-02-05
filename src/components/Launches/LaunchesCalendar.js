@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, ExternalLink, Gift, Zap } from 'lucide-react';
 
 const WidgetCard = styled.div`
   background: ${props => props.theme.colors.surface};
@@ -72,16 +72,147 @@ const DayHeader = styled.div`
   padding: 0.25rem 0;
 `;
 
-const DayCell = styled.div`
+const DayCellPlaceholder = styled.div`
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: ${props => props.theme.fontSize.xs};
   border-radius: ${props => props.theme.borderRadius.sm};
-  background: ${props => (props.hasEvent ? `${props.theme.colors.primary}18` : 'transparent')};
-  color: ${props => (props.hasEvent ? props.theme.colors.primary : props.theme.colors.text)};
-  font-weight: ${props => (props.hasEvent ? props.theme.fontWeight.semibold : 'inherit')};
+  background: transparent;
+  color: ${props => props.theme.colors.text};
+`;
+
+const DayCell = styled.button`
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: ${props => props.theme.fontSize.xs};
+  border-radius: ${props => props.theme.borderRadius.sm};
+  border: none;
+  background: ${props => (props.$hasEvent ? `${props.theme.colors.primary}18` : 'transparent')};
+  color: ${props => (props.$hasEvent ? props.theme.colors.primary : props.theme.colors.text)};
+  font-weight: ${props => (props.$hasEvent ? props.theme.fontWeight.semibold : 'inherit')};
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover {
+    background: ${props => props.theme.colors.surfaceHover};
+  }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  box-sizing: border-box;
+`;
+
+const ModalBox = styled.div`
+  background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  max-width: 420px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: ${props => props.theme.shadows['2xl']};
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid ${props => props.theme.colors.border};
+`;
+
+const ModalTitle = styled.h3`
+  font-size: ${props => props.theme.fontSize.base};
+  font-weight: ${props => props.theme.fontWeight.semibold};
+  color: ${props => props.theme.colors.text};
+  margin: 0;
+`;
+
+const ModalCloseBtn = styled.button`
+  padding: 0.35rem;
+  border: none;
+  background: transparent;
+  color: ${props => props.theme.colors.textSecondary};
+  cursor: pointer;
+  border-radius: ${props => props.theme.borderRadius.sm};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: ${props => props.theme.colors.surfaceHover};
+    color: ${props => props.theme.colors.text};
+  }
+`;
+
+const ModalBody = styled.div`
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+`;
+
+const ModalEventItem = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: ${props => props.theme.borderRadius.md};
+  color: ${props => props.theme.colors.text};
+  text-decoration: none;
+  transition: background 0.2s;
+  margin-bottom: 0.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &:hover {
+    background: ${props => props.theme.colors.surfaceHover};
+  }
+`;
+
+const ModalEventIcon = styled.div`
+  width: 36px;
+  height: 36px;
+  border-radius: ${props => props.theme.borderRadius.sm};
+  background: ${props => props.theme.colors.primary}20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${props => props.theme.colors.primary};
+  flex-shrink: 0;
+`;
+
+const ModalEventType = styled.span`
+  font-size: ${props => props.theme.fontSize.xs};
+  color: ${props => props.theme.colors.textSecondary};
+  text-transform: capitalize;
+`;
+
+const ModalEventTitle = styled.span`
+  font-size: ${props => props.theme.fontSize.sm};
+  font-weight: ${props => props.theme.fontWeight.medium};
+`;
+
+const ModalEmpty = styled.p`
+  font-size: ${props => props.theme.fontSize.sm};
+  color: ${props => props.theme.colors.textSecondary};
+  margin: 0;
+  padding: 1rem 0;
 `;
 
 const EventsList = styled.div`
@@ -160,6 +291,7 @@ function getCalendarDays(year, month) {
 
 export default function LaunchesCalendar({ events = [], compact = false }) {
   const [viewDate, setViewDate] = useState(() => new Date());
+  const [selectedDateKey, setSelectedDateKey] = useState(null);
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
@@ -189,6 +321,37 @@ export default function LaunchesCalendar({ events = [], compact = false }) {
       .slice(0, compact ? 5 : 10);
   }, [events, compact]);
 
+  const selectedDateEvents = useMemo(() => {
+    if (!selectedDateKey) return [];
+    return eventsByDate[selectedDateKey] || [];
+  }, [selectedDateKey, eventsByDate]);
+
+  const selectedDateFormatted = useMemo(() => {
+    if (!selectedDateKey) return '';
+    const [y, m, d] = selectedDateKey.split('-');
+    return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10)).toLocaleDateString(undefined, {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }, [selectedDateKey]);
+
+  const handleDayClick = (dateKey) => {
+    setSelectedDateKey(dateKey);
+  };
+
+  const handleCloseModal = (e) => {
+    if (!e || e.target === e.currentTarget || e.key === 'Escape') setSelectedDateKey(null);
+  };
+
+  useEffect(() => {
+    if (!selectedDateKey) return;
+    const onEscape = (e) => e.key === 'Escape' && handleCloseModal(e);
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [selectedDateKey]);
+
   return (
     <WidgetCard compact={compact}>
       <Header>
@@ -212,13 +375,19 @@ export default function LaunchesCalendar({ events = [], compact = false }) {
         ))}
         {calendarRows.map((row, rowIdx) =>
           row.map((cell, colIdx) => {
-            if (!cell) return <DayCell key={`${rowIdx}-${colIdx}`} />;
+            if (!cell) return <DayCellPlaceholder key={`${rowIdx}-${colIdx}`} />;
             const dateKey = cell.current
               ? `${year}-${String(month + 1).padStart(2, '0')}-${String(cell.day).padStart(2, '0')}`
               : null;
             const hasEvent = dateKey && eventsByDate[dateKey]?.length > 0;
             return (
-              <DayCell key={`${rowIdx}-${colIdx}-${cell.day}`} hasEvent={hasEvent}>
+              <DayCell
+                key={`${rowIdx}-${colIdx}-${cell.day}`}
+                type="button"
+                $hasEvent={hasEvent}
+                onClick={() => dateKey && handleDayClick(dateKey)}
+                title={hasEvent ? `View ${eventsByDate[dateKey].length} event(s)` : 'No events'}
+              >
                 {cell.day}
               </DayCell>
             );
@@ -243,6 +412,51 @@ export default function LaunchesCalendar({ events = [], compact = false }) {
           ))
         )}
       </EventsList>
+
+      {selectedDateKey && (
+        <ModalOverlay
+          onClick={handleCloseModal}
+          onKeyDown={(e) => e.key === 'Escape' && handleCloseModal(e)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="day-modal-title"
+        >
+          <ModalBox onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle id="day-modal-title">
+                {selectedDateFormatted}
+              </ModalTitle>
+              <ModalCloseBtn onClick={() => setSelectedDateKey(null)} aria-label="Close">
+                <X size={20} />
+              </ModalCloseBtn>
+            </ModalHeader>
+            <ModalBody>
+              {selectedDateEvents.length === 0 ? (
+                <ModalEmpty>No launches or airdrops on this day.</ModalEmpty>
+              ) : (
+                selectedDateEvents.map((e) => (
+                  <ModalEventItem
+                    key={e.id}
+                    href={e.link || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={e.title}
+                  >
+                    <ModalEventIcon>
+                      {e.type === 'airdrop' ? <Gift size={18} /> : <Zap size={18} />}
+                    </ModalEventIcon>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <ModalEventType>{e.type}</ModalEventType>
+                      <ModalEventTitle style={{ display: 'block' }}>{e.title}</ModalEventTitle>
+                    </div>
+                    <ExternalLink size={16} color="var(--textSecondary)" />
+                  </ModalEventItem>
+                ))
+              )}
+            </ModalBody>
+          </ModalBox>
+        </ModalOverlay>
+      )}
     </WidgetCard>
   );
 }

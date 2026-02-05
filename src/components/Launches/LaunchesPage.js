@@ -183,6 +183,25 @@ const CardMeta = styled.div`
   color: ${(p) => p.theme.colors.textSecondary};
 `;
 
+const ChainBadge = styled.span`
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: ${(p) => p.theme.fontSize.xs};
+  font-weight: ${(p) => p.theme.fontWeight.medium};
+  background: ${(p) => p.theme.colors.primary}20;
+  color: ${(p) => p.theme.colors.primary};
+  border-radius: ${(p) => p.theme.borderRadius.sm};
+  margin-right: 0.5rem;
+`;
+
+const CardLinkLabel = styled.span`
+  font-size: ${(p) => p.theme.fontSize.xs};
+  color: ${(p) => p.theme.colors.primary};
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
 const CardLink = styled(ExternalLink)`
   width: 18px;
   height: 18px;
@@ -198,6 +217,26 @@ const EmptyState = styled.p`
 `;
 
 const TAB_KEYS = { airdrops: 'airdrops', tokens: 'tokens', nfts: 'nfts' };
+
+/** Format chain ID for display (e.g. solana -> Solana) */
+function formatChainId(id) {
+  if (!id) return '';
+  const s = String(id).toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Strip URLs from text for display */
+function stripUrls(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text.replace(/https?:\/\/[^\s]+/g, '').replace(/\s+/g, ' ').trim();
+}
+
+/** Ensure title isn't a raw URL */
+function safeTitle(title) {
+  if (!title || typeof title !== 'string') return 'New token';
+  if (/^https?:\/\//i.test(title.trim())) return 'New token';
+  return title;
+}
 
 export default function LaunchesPage() {
   useDocumentTitle('Launches & Drops');
@@ -299,24 +338,31 @@ export default function LaunchesPage() {
           (newTokens.length === 0 ? (
             <EmptyState>No new tokens loaded. Try refreshing.</EmptyState>
           ) : (
-            newTokens.map((t, i) => (
-              <Card key={t.id || i} href={t.url || '#'} target="_blank" rel="noopener noreferrer">
-                {t.icon ? (
-                  <CardThumb src={t.icon} alt="" />
-                ) : (
-                  <CardIcon>
-                    <Zap size={24} color="var(--primary, #6366f1)" />
-                  </CardIcon>
-                )}
-                <CardBody>
-                  <CardTitle>{t.title}</CardTitle>
-                  <CardMeta>
-                    {t.chainId} {t.description && ` · ${t.description.slice(0, 80)}...`}
-                  </CardMeta>
-                </CardBody>
-                <CardLink />
-              </Card>
-            ))
+            newTokens.map((t, i) => {
+              const cleanDesc = stripUrls(t.description);
+              return (
+                <Card key={t.id || i} href={t.url || '#'} target="_blank" rel="noopener noreferrer">
+                  {t.icon ? (
+                    <CardThumb src={t.icon} alt="" />
+                  ) : (
+                    <CardIcon>
+                      <Zap size={24} color="var(--primary, #6366f1)" />
+                    </CardIcon>
+                  )}
+                  <CardBody>
+                    <CardTitle>{safeTitle(t.title)}</CardTitle>
+                    <CardMeta>
+                      {t.chainId && <ChainBadge>{formatChainId(t.chainId)}</ChainBadge>}
+                      {cleanDesc ? `${cleanDesc.slice(0, 80)}${cleanDesc.length > 80 ? '…' : ''}` : 'View chart on DexScreener'}
+                    </CardMeta>
+                  </CardBody>
+                  <CardLinkLabel>
+                    <CardLink size={14} />
+                    Chart
+                  </CardLinkLabel>
+                </Card>
+              );
+            })
           ))}
 
         {activeTab === TAB_KEYS.nfts &&
