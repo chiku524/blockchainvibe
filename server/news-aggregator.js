@@ -51,24 +51,32 @@ export class NewsAggregator {
         : allNews.filter(article => this.matchesCategory(article, category));
       
       // Filter by time
-      const timeFilteredNews = this.filterByTime(filteredNews, timeFilter);
+      let timeFilteredNews = this.filterByTime(filteredNews, timeFilter);
+      if (timeFilteredNews.length === 0 && filteredNews.length > 0) {
+        timeFilteredNews = filteredNews;
+      }
       
       // Sort articles
       const sortedNews = this.sortArticles(timeFilteredNews, sortBy);
-      
-      // Enrich articles with sentiment, entities, summaries, etc.
-      const enrichedNews = contentEnricher.enrichArticles(sortedNews);
-      
-      // Calculate relevance scores using enhanced scorer
-      const scoredNews = enrichedNews.map(article => ({
-        ...article,
-        relevance_score: enhancedRelevanceScorer.calculateRelevanceScore(article, userProfile)
-      }));
-      
-      // Sort by relevance score
+      if (sortedNews.length === 0) return [];
+
+      let scoredNews;
+      try {
+        const enrichedNews = contentEnricher.enrichArticles(sortedNews);
+        scoredNews = enrichedNews.map(article => ({
+          ...article,
+          relevance_score: enhancedRelevanceScorer.calculateRelevanceScore(article, userProfile)
+        }));
+      } catch (enrichError) {
+        console.error('Enrichment error, returning articles without enrichment:', enrichError);
+        scoredNews = sortedNews.map(article => ({
+          ...article,
+          relevance_score: article.relevance_score ?? 0.5
+        }));
+      }
+
       scoredNews.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
-      
-      // Broadcast breaking news via WebSocket (async, don't wait)
+
       (async () => {
         try {
           const { webSocketService } = await import('./services/websocket-service.js');
@@ -79,11 +87,9 @@ export class NewsAggregator {
           }
         } catch (error) {
           // WebSocket not available, continue without broadcasting
-          // Silently fail - WebSocket is optional
         }
       })();
-      
-      // Limit results
+
       return scoredNews.slice(0, limit);
       
     } catch (error) {

@@ -918,10 +918,10 @@ async function fetchBlockchainNews(limit, options = {}) {
         const t = new Date(a.published_at).getTime();
         return !isNaN(t) && t >= cutoff;
       });
-      const toMerge = recent.length > 0 ? recent : [];
+      const toMerge = recent.length > 0 ? recent : rawNews;
       toMerge.sort((a, b) => (new Date(b.published_at || 0).getTime()) - (new Date(a.published_at || 0).getTime()));
       const combined = toMerge.slice(0, limit);
-      console.log(`Few articles (${rawNews.length}, ${toMerge.length} recent); returning ${combined.length} real articles only`);
+      console.log(`Few articles (${rawNews.length}, ${recent.length} recent); returning ${combined.length} real articles only`);
       return combined.map((article, index) => {
         try {
           const cleanUrl = (article.url || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
