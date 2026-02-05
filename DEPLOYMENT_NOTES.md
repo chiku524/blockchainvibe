@@ -224,6 +224,16 @@ Added to `package.json`:
 - `npm run deploy:worker` - Deploy Workers API
 - `npm run deploy:assets` - Deploy Assets Worker
 
+### Updates Not Showing Immediately After Deploy
+
+If you've deployed both Worker and Pages but changes don't appear:
+
+1. **Frontend (Pages)**: Push to `main` triggers GitHub Actions → Cloudflare Pages deploy. Wait for the workflow to finish (Actions tab on GitHub). Then do a **hard refresh** in the browser: `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac).
+
+2. **Backend (Worker)**: The Launches API (`/api/launches/drops`) is cached for 3 minutes. After deploying a new Worker, wait 3–5 minutes for the cache to expire, or hard refresh multiple times. The new response will then be cached.
+
+3. **Browser cache**: If still seeing old content, try an incognito/private window or clear site data for blockchainvibe.news.
+
 ### Recommended Future Enhancements
 
 1. **Cloudflare Images** (Optional):
