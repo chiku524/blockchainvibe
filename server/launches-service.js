@@ -19,6 +19,26 @@ function extractXMLContent(xml, tag) {
   return (match[1] || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim();
 }
 
+/** Derive display name from DexScreener token (header is an image URL, not name) */
+function tokenDisplayName(t) {
+  const desc = (t.description || '').trim();
+  if (desc) {
+    const firstLine = desc.split(/[\n\r]+/)[0].trim();
+    const stripped = firstLine.replace(/https?:\/\/[^\s]+/g, '').replace(/\s+/g, ' ').trim();
+    if (stripped && stripped.length <= 60) return stripped.slice(0, 50);
+    if (stripped) return stripped.slice(0, 47) + '…';
+  }
+  const web = (t.links || []).find((l) => l.label === 'Website' || l.type === 'website');
+  if (web && web.url) {
+    try {
+      const host = new URL(web.url).hostname.replace(/^www\./, '');
+      const name = host.split('.')[0];
+      if (name && name.length > 2) return name.charAt(0).toUpperCase() + name.slice(1);
+    } catch (_) {}
+  }
+  return `Token on ${(t.chainId || 'chain').charAt(0).toUpperCase() + (t.chainId || '').slice(1)}`;
+}
+
 /** Project-backed filter: token has links (website, twitter, etc.) = real project presence */
 function isProjectBackedToken(t) {
   const hasLinks = t.links && Array.isArray(t.links) && t.links.length > 0;
@@ -149,7 +169,7 @@ export class LaunchesService {
               id: t.tokenAddress || t.url,
               chainId: t.chainId,
               tokenAddress: t.tokenAddress,
-              title: t.header || t.description?.slice(0, 60) || 'New token',
+              title: tokenDisplayName(t),
               description: t.description || '',
               icon: t.icon,
               url: t.url,
@@ -170,7 +190,7 @@ export class LaunchesService {
               id: t.tokenAddress || t.url,
               chainId: t.chainId,
               tokenAddress: t.tokenAddress,
-              title: t.header || t.description?.slice(0, 60) || 'Boosted token',
+              title: tokenDisplayName(t),
               description: t.description || '',
               icon: t.icon,
               url: t.url,
@@ -238,13 +258,15 @@ export class LaunchesService {
     (newTokens || []).forEach((t) => {
       if (t.date) {
         const date = t.date.slice(0, 10);
-        if (!events.some((e) => e.date === date && e.title === t.title)) {
+        if (!events.some((e) => e.date === date && e.id === (t.id || t.tokenAddress))) {
           events.push({
             id: t.id || t.tokenAddress,
-            title: t.title || 'New token',
+            title: t.title || tokenDisplayName(t),
             date,
             type: 'token',
             link: t.url,
+            icon: t.icon,
+            chainId: t.chainId,
           });
         }
       }

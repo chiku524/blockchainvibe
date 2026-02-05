@@ -195,6 +195,13 @@ const ModalEventIcon = styled.div`
   justify-content: center;
   color: ${props => props.theme.colors.primary};
   flex-shrink: 0;
+  overflow: hidden;
+`;
+
+const ModalEventIconImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const ModalEventType = styled.span`
@@ -206,6 +213,19 @@ const ModalEventType = styled.span`
 const ModalEventTitle = styled.span`
   font-size: ${props => props.theme.fontSize.sm};
   font-weight: ${props => props.theme.fontWeight.medium};
+`;
+
+const ModalEventChain = styled.span`
+  font-size: ${props => props.theme.fontSize.xs};
+  color: ${props => props.theme.colors.textSecondary};
+  display: block;
+  margin-top: 0.125rem;
+`;
+
+const ModalEventLinkLabel = styled.span`
+  font-size: ${props => props.theme.fontSize.xs};
+  color: ${props => props.theme.colors.primary};
+  flex-shrink: 0;
 `;
 
 const ModalEmpty = styled.p`
@@ -440,16 +460,30 @@ export default function LaunchesCalendar({ events = [], compact = false }) {
                     href={e.link || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title={e.title}
+                    title={e.type === 'airdrop' ? e.title : `View ${e.title} chart on DexScreener`}
                   >
                     <ModalEventIcon>
-                      {e.type === 'airdrop' ? <Gift size={18} /> : <Zap size={18} />}
+                      {e.type === 'airdrop' ? (
+                        <Gift size={18} />
+                      ) : e.icon ? (
+                        <ModalEventIconImg src={e.icon} alt="" />
+                      ) : (
+                        <Zap size={18} />
+                      )}
                     </ModalEventIcon>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <ModalEventType>{e.type}</ModalEventType>
                       <ModalEventTitle style={{ display: 'block' }}>{e.title}</ModalEventTitle>
+                      {e.chainId && e.type === 'token' && (
+                        <ModalEventChain>
+                          {e.chainId.charAt(0).toUpperCase() + e.chainId.slice(1)}
+                        </ModalEventChain>
+                      )}
                     </div>
-                    <ExternalLink size={16} color="var(--textSecondary)" />
+                    <ModalEventLinkLabel>
+                      {e.type === 'airdrop' ? 'View' : 'Chart'}
+                      <ExternalLink size={12} style={{ marginLeft: 2, verticalAlign: 'middle' }} />
+                    </ModalEventLinkLabel>
                   </ModalEventItem>
                 ))
               )}

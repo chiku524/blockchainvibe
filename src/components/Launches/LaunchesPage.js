@@ -231,12 +231,6 @@ function stripUrls(text) {
   return text.replace(/https?:\/\/[^\s]+/g, '').replace(/\s+/g, ' ').trim();
 }
 
-/** Ensure title isn't a raw URL */
-function safeTitle(title) {
-  if (!title || typeof title !== 'string') return 'New token';
-  if (/^https?:\/\//i.test(title.trim())) return 'New token';
-  return title;
-}
 
 export default function LaunchesPage() {
   useDocumentTitle('Launches & Drops');
@@ -350,7 +344,7 @@ export default function LaunchesPage() {
                     </CardIcon>
                   )}
                   <CardBody>
-                    <CardTitle>{safeTitle(t.title)}</CardTitle>
+                    <CardTitle>{t.title}</CardTitle>
                     <CardMeta>
                       {t.chainId && <ChainBadge>{formatChainId(t.chainId)}</ChainBadge>}
                       {cleanDesc ? `${cleanDesc.slice(0, 80)}${cleanDesc.length > 80 ? '…' : ''}` : 'View chart on DexScreener'}
