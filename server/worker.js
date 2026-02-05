@@ -568,15 +568,15 @@ async function handleTrendingNews(request, env) {
       last_updated: new Date().toISOString(),
       type: 'trending'
     }), {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
         ...corsHeaders
       }
     });
     
   } catch (error) {
     console.error('Trending news API error:', error);
-    // Return mock news as fallback instead of error
     const fallbackNews = getMockNews(20);
     return new Response(JSON.stringify({
       articles: fallbackNews,
@@ -585,9 +585,10 @@ async function handleTrendingNews(request, env) {
       type: 'trending',
       warning: 'Using fallback data due to error'
     }), {
-      status: 200, // Return 200 with warning instead of 500
-      headers: { 
+      status: 200,
+      headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
         ...corsHeaders
       }
     });
@@ -660,15 +661,15 @@ async function handlePersonalizedNews(request, env) {
       last_updated: new Date().toISOString(),
       type: 'personalized'
     }), {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
         ...corsHeaders
       }
     });
     
   } catch (error) {
     console.error('Personalized news API error:', error);
-    // Return mock news as fallback instead of error
     const fallbackNews = getMockNews(20);
     return new Response(JSON.stringify({
       articles: fallbackNews,
@@ -678,9 +679,10 @@ async function handlePersonalizedNews(request, env) {
       type: 'personalized',
       warning: 'Using fallback data due to error'
     }), {
-      status: 200, // Return 200 with warning instead of 500
-      headers: { 
+      status: 200,
+      headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
         ...corsHeaders
       }
     });
@@ -834,7 +836,7 @@ async function handleNews(request, env) {
     
     return new Response(JSON.stringify({
       articles: newsItems,
-      news: newsItems, // Keep both for compatibility
+      news: newsItems,
       total_count: newsItems.length,
       user_relevance_score: userRelevanceScore,
       last_updated: new Date().toISOString(),
@@ -844,8 +846,9 @@ async function handleNews(request, env) {
         ai_agents: "active"
       }
     }), {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
         ...corsHeaders
       }
     });
@@ -857,7 +860,7 @@ async function handleNews(request, env) {
       details: error.message
     }), {
       status: 500,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         ...corsHeaders
       }

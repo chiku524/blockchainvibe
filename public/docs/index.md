@@ -99,9 +99,13 @@ New to BlockchainVibe? Start here:
 
 Ready to integrate? Check out the **[API Reference](./api-reference.md)** or **[AI Integration Guide](./ai-integration.md)**.
 
+### Contributing to documentation
+
+Found an error or want to improve the docs? Open an issue or submit a pull request on [GitHub](https://github.com/chiku524/blockchainvibe).
+
 ---
 
 **Built with ❤️ for the blockchain community**
 
-*Last updated: January 2025*
+*Last updated: February 2025*
 

@@ -97,21 +97,15 @@ export class NewsAggregator {
     // Get all feeds including premium feeds
     const allFeeds = [...NEWS_SOURCES.RSS_FEEDS, ...(NEWS_SOURCES.PREMIUM_FEEDS || [])];
     
-    // Filter by enabled status
+    // Filter by enabled status only (always use all enabled feeds to maximize article variety)
     const configEnabled = allFeeds.filter(feed => feed.enabled);
-    // Filter by health status (skip health filter if too few healthy feeds to avoid "1 article" issue)
-    const healthyFeeds = configEnabled.filter(feed => sourceHealthMonitor.isHealthy(feed.name));
-    const enabledFeeds = healthyFeeds.length >= 5 ? healthyFeeds : configEnabled;
-    
-    if (healthyFeeds.length < 5 && configEnabled.length > healthyFeeds.length) {
-      console.log(`[NewsAggregator] Only ${healthyFeeds.length} healthy feeds; using all ${configEnabled.length} enabled feeds to ensure variety`);
-    }
+    const enabledFeeds = configEnabled;
     
     // Sort by priority (lower number = higher priority)
-    const sortedFeeds = enabledFeeds.sort((a, b) => (a.priority || 4) - (b.priority || 4));
+    const sortedFeeds = [...enabledFeeds].sort((a, b) => (a.priority || 4) - (b.priority || 4));
     
-    // Limit to top priority feeds (use more when we had to bypass health so we get enough articles)
-    const feedLimit = enabledFeeds.length === configEnabled.length ? 20 : 15;
+    // Limit to top priority feeds
+    const feedLimit = 20;
     const priorityFeeds = sortedFeeds.slice(0, feedLimit);
     
     const newsPromises = priorityFeeds.map(async (feed) => {
@@ -141,23 +135,25 @@ export class NewsAggregator {
     });
     
     try {
-      // Wrap all promises with a total timeout
-      const fetchPromise = Promise.allSettled(newsPromises);
-      const results = await this.withTimeout(
-        fetchPromise,
-        this.totalFetchTimeout,
-        'RSS feed fetching timed out'
-      );
-      
+      // Race total timeout against all feeds settling; on timeout, use whatever has settled so far
+      const results = new Array(newsPromises.length);
+      const settled = Promise.allSettled(newsPromises).then(settledResults => {
+        settledResults.forEach((r, i) => { results[i] = r; });
+      });
+      const timeout = new Promise((resolve) => setTimeout(resolve, this.totalFetchTimeout));
+      await Promise.race([settled, timeout]);
+
       const allArticles = results
-        .filter(result => result.status === 'fulfilled')
-        .flatMap(result => result.value)
+        .filter(r => r && r.status === 'fulfilled')
+        .flatMap(r => r.value)
         .filter(article => article && article.title);
-      
+
+      if (allArticles.length > 0 && results.some(r => r === undefined)) {
+        console.log(`[NewsAggregator] Total timeout; using ${allArticles.length} articles from feeds that responded in time`);
+      }
       return allArticles.slice(0, limit);
     } catch (error) {
       console.error('RSS feed parsing error:', error);
-      // Return empty array instead of failing completely
       return [];
     }
   }

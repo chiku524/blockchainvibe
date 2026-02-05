@@ -110,7 +110,7 @@ DATABASE_URL=sqlite:///./ai_news_agent.db
 
 1. **Create D1 Database**
    ```bash
-   wrangler d1 create ai-news-agent-db
+   wrangler d1 create blockchainvibe-db
    ```
 
 2. **Set environment variables**
@@ -231,7 +231,7 @@ To run this project, you'll need access to:
 2. **SingularityNET MeTTa Knowledge Graph**
    - GitHub: https://github.com/singnet
    - Documentation: https://singnet.github.io/
-   - Integration guide: See `docs/ai-integration.md`
+   - Integration guide: See in-app docs at /docs (AI Integration)
 
 3. **Cloudflare Infrastructure** (for production deployment)
    - Cloudflare Workers: https://developers.cloudflare.com/workers/
@@ -316,7 +316,7 @@ For support, please open an issue on GitHub or contact the development team.
 ### ✅ Submission Requirements
 
 #### Code Requirements
-- ✅ **GitHub Repository**: Public repository available at https://github.com/chiku524/ai-news-agent
+- ✅ **GitHub Repository**: Public repository available at https://github.com/chiku524/blockchainvibe
 - ✅ **README.md with Agent Details**: 
   - Agent names: `blockchainvibe-news-fetcher` and `blockchainvibe-relevance-scorer`
   - Agent addresses: Generated from seeds (managed by uAgents framework)
@@ -339,7 +339,7 @@ For support, please open an issue on GitHub or contact the development team.
 - ✅ **Agent System Works**: Both agents function as intended with real-time news processing
 - ✅ **Real-time Communication**: Agents communicate and reason in real-time
 - ✅ **Proper Integration**: Full integration with Fetch.ai uAgents framework
-- ✅ **Documentation**: Comprehensive technical documentation in `docs/` directory
+- ✅ **Documentation**: Technical documentation in repo `docs/` and in-app `/docs`
 
 #### 2. Use of ASI Alliance Tech (20%)
 - ✅ **Agentverse Registration**: Both agents registered on Agentverse platform
@@ -364,20 +364,14 @@ For support, please open an issue on GitHub or contact the development team.
 - ✅ **Smooth UX**: Intuitive interface with dark/light themes, responsive design
 - ✅ **Comprehensive Documentation**: Detailed documentation covering all technologies and integration
 
-### 📚 Comprehensive Documentation
+### 📚 Documentation
 
-All documentation is available in the `docs/` directory:
-
-- **API Reference**: `docs/api-reference.md` - Complete REST API documentation
-- **AI Integration**: `docs/ai-integration.md` - Fetch.ai uAgents and MeTTa integration guide
-- **Architecture**: `docs/architecture.md` - Technical architecture overview
-- **Getting Started**: `docs/getting-started.md` - Quick start guide
-- **User Guide**: `docs/user-guide.md` - User-facing documentation
-- **Features**: `docs/features.md` - Complete feature list
+- **Project docs** (deployment, subscription, features): [docs/](docs/) in this repo — see [docs/README.md](docs/README.md) for the index.
+- **User & API docs** (getting started, features, API reference, AI integration, architecture): served at **https://blockchainvibe.news/docs** (source: `public/docs/`).
 
 ### 🔗 Quick Links
 
-- **GitHub Repository**: https://github.com/chiku524/ai-news-agent
+- **GitHub Repository**: https://github.com/chiku524/blockchainvibe
 - **Demo Video**: https://www.youtube.com/watch?v=vVkr_wuyFSM
 - **Live Website**: https://blockchainvibe.news
 - **Documentation**: https://blockchainvibe.news/docs

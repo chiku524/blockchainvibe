@@ -1,8 +1,8 @@
 // Service Worker for BlockchainVibe PWA
 // Provides offline support and caching
 
-const CACHE_NAME = 'blockchainvibe-v1';
-const RUNTIME_CACHE = 'blockchainvibe-runtime-v1';
+const CACHE_NAME = 'blockchainvibe-v2';
+const RUNTIME_CACHE = 'blockchainvibe-runtime-v2';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -49,7 +49,7 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network-first for document so normal refresh gets latest build; cache-first for hashed assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -59,61 +59,43 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle API requests with network-first strategy
-  if (url.pathname.startsWith('/api/')) {
+  // Navigation/document: network-first so a normal refresh loads fresh HTML and latest app
+  const isDocument = request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html';
+  if (isDocument) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone the response
           const responseToCache = response.clone();
-          // Cache successful API responses
-          if (response.status === 200) {
-            caches.open(RUNTIME_CACHE).then((cache) => {
-              cache.put(request, responseToCache);
-            });
-          }
+          if (response.status === 200)
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
           return response;
         })
-        .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-            // Return offline response
-            return new Response(
-              JSON.stringify({ 
-                error: 'Offline', 
-                message: 'You are currently offline. Please check your connection.' 
-              }),
-              {
-                status: 503,
-                statusText: 'Service Unavailable',
-                headers: { 'Content-Type': 'application/json' },
-              }
-            );
-          });
-        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/index.html')))
     );
     return;
   }
 
-  // Handle static assets with cache-first strategy
+  // API: network-only (do not cache) so news and other dynamic data are never stale
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(request).catch(() =>
+        new Response(
+          JSON.stringify({ error: 'Offline', message: 'You are currently offline. Please check your connection.' }),
+          { status: 503, statusText: 'Service Unavailable', headers: { 'Content-Type': 'application/json' } }
+        )
+      )
+    );
+    return;
+  }
+
+  // Static assets (hashed JS/CSS, images): cache-first for speed
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+      if (cachedResponse) return cachedResponse;
       return fetch(request).then((response) => {
-        // Don't cache non-successful responses
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-        // Clone the response
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
         const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, responseToCache);
-        });
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
         return response;
       });
     })

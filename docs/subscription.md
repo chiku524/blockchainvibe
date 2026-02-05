@@ -1,6 +1,6 @@
 # Subscription Feature (On Hold)
 
-Subscription/billing is implemented in the codebase but **disabled by default**. Enable it when you have an active userbase and are ready to offer Pro plans.
+Subscription/billing is implemented in the codebase but **disabled by default**. Enable it when you have an active userbase and are ready to offer Pro plans. Last updated: February 2025.
 
 ## What’s in place
 
@@ -20,12 +20,12 @@ Subscription/billing is implemented in the codebase but **disabled by default**.
 ## How to enable
 
 1. **Worker (Cloudflare)**
-   - In dashboard: Workers & Pages → your worker → Settings → Variables and Secrets.
+   - Workers & Pages → your worker → Settings → Variables and Secrets.
    - Add: `SUBSCRIPTION_ENABLED` = `true`.
-   - Or in `wrangler.toml` (if you use env there): `[vars]` with `SUBSCRIPTION_ENABLED = "true"`.
+   - Or in `wrangler.toml`: `[vars]` with `SUBSCRIPTION_ENABLED = "true"`.
 
 2. **Frontend (React)**
-   - Set `REACT_APP_SUBSCRIPTION_ENABLED=true` in the build environment (e.g. in Cloudflare Pages build env or `.env.production`).
+   - Set `REACT_APP_SUBSCRIPTION_ENABLED=true` in the build environment (e.g. Cloudflare Pages build env or `.env.production`).
    - Rebuild and deploy the frontend.
 
-After enabling, users will see the Subscription section in Settings and the upgrade banner when not on Pro. The backend will read/write the `subscriptions` table; you can later add Stripe (or another provider) and wire webhooks to update `stripe_*` and `current_period_end`.
+After enabling, users will see the Subscription section in Settings and the upgrade banner when not on Pro. You can later add Stripe (or another provider) and wire webhooks to update `stripe_*` and `current_period_end`.
