@@ -11,8 +11,8 @@ export class NewsAggregator {
   constructor() {
     this.cache = new Map();
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
-    this.feedTimeout = 10000; // 10 seconds per RSS feed
-    this.totalFetchTimeout = 20000; // 20 seconds total for all feeds
+    this.feedTimeout = 12000; // 12 seconds per RSS feed
+    this.totalFetchTimeout = 30000; // 30 seconds total so more feeds can complete
   }
 
   // Timeout helper function
@@ -97,16 +97,22 @@ export class NewsAggregator {
     // Get all feeds including premium feeds
     const allFeeds = [...NEWS_SOURCES.RSS_FEEDS, ...(NEWS_SOURCES.PREMIUM_FEEDS || [])];
     
-    // Filter by health status and enabled status
-    const enabledFeeds = allFeeds.filter(feed => 
-      feed.enabled && sourceHealthMonitor.isHealthy(feed.name)
-    );
+    // Filter by enabled status
+    const configEnabled = allFeeds.filter(feed => feed.enabled);
+    // Filter by health status (skip health filter if too few healthy feeds to avoid "1 article" issue)
+    const healthyFeeds = configEnabled.filter(feed => sourceHealthMonitor.isHealthy(feed.name));
+    const enabledFeeds = healthyFeeds.length >= 5 ? healthyFeeds : configEnabled;
+    
+    if (healthyFeeds.length < 5 && configEnabled.length > healthyFeeds.length) {
+      console.log(`[NewsAggregator] Only ${healthyFeeds.length} healthy feeds; using all ${configEnabled.length} enabled feeds to ensure variety`);
+    }
     
     // Sort by priority (lower number = higher priority)
     const sortedFeeds = enabledFeeds.sort((a, b) => (a.priority || 4) - (b.priority || 4));
     
-    // Limit to top priority feeds first to speed things up
-    const priorityFeeds = sortedFeeds.slice(0, 15); // Fetch top 15 feeds
+    // Limit to top priority feeds (use more when we had to bypass health so we get enough articles)
+    const feedLimit = enabledFeeds.length === configEnabled.length ? 20 : 15;
+    const priorityFeeds = sortedFeeds.slice(0, feedLimit);
     
     const newsPromises = priorityFeeds.map(async (feed) => {
       const startTime = Date.now();
