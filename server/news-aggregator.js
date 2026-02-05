@@ -416,6 +416,12 @@ export class NewsAggregator {
         }
         
         const data = await response.json();
+        if (api.name === 'NewsAPI') {
+          if (data.status !== 'ok') {
+            console.warn('[NewsAPI]', data.code || 'error', data.message || '');
+            return [];
+          }
+        }
         let articles = this.transformAPIData(data, api);
         if (api.name === 'NewsAPI') {
           articles = articles.filter(a => this.isBlockchainRelevant(a));
@@ -440,35 +446,51 @@ export class NewsAggregator {
     let articles = [];
     
     if (api.name === 'NewsAPI') {
-      articles = data.articles || [];
+      articles = Array.isArray(data.articles) ? data.articles : [];
     } else if (api.name === 'GNews') {
       articles = data.articles || [];
     } else if (api.name === 'CryptoPanic') {
       articles = data.results || [];
     }
     
-    return articles.map(article => ({
-      id: article.url || article.id || `${api.name}-${Date.now()}-${Math.random()}`,
-      title: article.title || article.headline,
-      url: article.url || article.link,
-      source: article.source?.name || api.name,
-      source_id: article.source?.id || null,
-      published_at: article.publishedAt || article.created_at || new Date().toISOString(),
-      summary: article.description || article.summary,
-      content: article.content || article.description,
-      excerpt: article.description || article.summary,
-      categories: this.categorizeContent(article.title + ' ' + (article.description || '')),
-      tags: this.extractTags(article.title + ' ' + (article.description || '')),
-      image_url: article.urlToImage || article.image,
-      author: article.author || null,
-      relevance_score: 0.5,
-      _source_api: api.name,
-      engagement_metrics: {
-        likes: Math.floor(Math.random() * 100),
-        views: Math.floor(Math.random() * 1000),
-        comments: Math.floor(Math.random() * 50)
-      }
-    }));
+    return articles.map((article, idx) => {
+      const url = article.url || article.link;
+      const rawId = article.url || article.id || `${api.name}-${Date.now()}-${idx}`;
+      const id = (api.name === 'NewsAPI' && url) ? this.safeArticleId(url, api.name) : rawId;
+      return {
+        id,
+        title: article.title || article.headline,
+        url,
+        source: article.source?.name || api.name,
+        source_id: article.source?.id || null,
+        published_at: article.publishedAt || article.created_at || new Date().toISOString(),
+        summary: article.description || article.summary,
+        content: article.content || article.description,
+        excerpt: article.description || article.summary,
+        categories: this.categorizeContent(article.title + ' ' + (article.description || '')),
+        tags: this.extractTags(article.title + ' ' + (article.description || '')),
+        image_url: article.urlToImage || article.image,
+        author: article.author || null,
+        relevance_score: 0.5,
+        _source_api: api.name,
+        engagement_metrics: {
+          likes: Math.floor(Math.random() * 100),
+          views: Math.floor(Math.random() * 1000),
+          comments: Math.floor(Math.random() * 50)
+        }
+      };
+    });
+  }
+
+  // URL-safe article id for routing and AI tracking (detail page, analytics)
+  safeArticleId(url, source) {
+    if (!url || typeof url !== 'string') return `${source}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    try {
+      const hash = url.split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0);
+      return `${source}-${Math.abs(hash).toString(36)}`;
+    } catch {
+      return `${source}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    }
   }
 
   // Deduplicate news articles
@@ -494,7 +516,7 @@ export class NewsAggregator {
     return keywords.some(keyword => articleText.includes(keyword.toLowerCase()));
   }
 
-  // NewsAPI from-date for recency (ISO 8601); reduces quota and surfaces trending only
+  // NewsAPI from-date for recency (ISO 8601); use 7d default so we get enough articles
   newsApiFromDate(timeFilter) {
     const now = Date.now();
     const ms = {
@@ -506,7 +528,7 @@ export class NewsAggregator {
       'week': 7 * 24 * 60 * 60 * 1000,
       'month': 30 * 24 * 60 * 60 * 1000
     };
-    const span = ms[timeFilter] || ms['24h'];
+    const span = ms[timeFilter] || ms['7d'];
     return new Date(now - span).toISOString().slice(0, 19) + 'Z';
   }
 

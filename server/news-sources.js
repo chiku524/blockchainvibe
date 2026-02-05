@@ -730,13 +730,14 @@ export const NEWS_CATEGORIES = {
   "polkadot": "Polkadot"
 };
 
-// Core terms required for NewsAPI articles (avoids off-topic from other industries)
+// Core terms for NewsAPI articles (at least one must appear so we show blockchain-relevant only)
 export const BLOCKCHAIN_CORE_TERMS = [
-  'bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto ', 'crypto.', 'crypto,', 'blockchain',
+  'bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto', 'blockchain', 'block chain',
   'defi', 'decentralized finance', 'nft', 'non-fungible', 'web3', 'altcoin', 'smart contract',
   'token sale', 'ico', 'ido', 'coinbase', 'binance', 'crypto exchange', 'wallet', 'mining',
   'sec ', 'sec.', 'crypto regulation', 'stablecoin', 'dao', 'dex', 'uniswap', 'layer 2',
-  'arbitrum', 'optimism', 'polygon', 'solana', 'sol ', 'sol.', 'airdrop', 'token launch'
+  'arbitrum', 'optimism', 'polygon', 'solana', 'airdrop', 'token launch', 'token', 'tokens',
+  'digital currency', 'virtual currency', 'digital asset', 'crypto market', 'crypto sector'
 ];
 
 // Keywords for content filtering and categorization
