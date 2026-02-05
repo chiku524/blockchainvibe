@@ -730,6 +730,15 @@ export const NEWS_CATEGORIES = {
   "polkadot": "Polkadot"
 };
 
+// Core terms required for NewsAPI articles (avoids off-topic from other industries)
+export const BLOCKCHAIN_CORE_TERMS = [
+  'bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto ', 'crypto.', 'crypto,', 'blockchain',
+  'defi', 'decentralized finance', 'nft', 'non-fungible', 'web3', 'altcoin', 'smart contract',
+  'token sale', 'ico', 'ido', 'coinbase', 'binance', 'crypto exchange', 'wallet', 'mining',
+  'sec ', 'sec.', 'crypto regulation', 'stablecoin', 'dao', 'dex', 'uniswap', 'layer 2',
+  'arbitrum', 'optimism', 'polygon', 'solana', 'sol ', 'sol.', 'airdrop', 'token launch'
+];
+
 // Keywords for content filtering and categorization
 export const CATEGORY_KEYWORDS = {
   "bitcoin": ["bitcoin", "btc", "satoshi", "lightning network", "bitcoin etf", "halving"],

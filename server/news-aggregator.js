@@ -1,7 +1,7 @@
 // News Aggregation Service for BlockchainVibe
 // Handles RSS feeds, APIs, and content processing
 
-import { NEWS_SOURCES, NEWS_CATEGORIES, CATEGORY_KEYWORDS } from './news-sources.js';
+import { NEWS_SOURCES, NEWS_CATEGORIES, CATEGORY_KEYWORDS, BLOCKCHAIN_CORE_TERMS } from './news-sources.js';
 import { sourceHealthMonitor } from './services/source-health-monitor.js';
 import { deduplicateArticles, quickDeduplicate } from './utils/deduplication.js';
 import { enhancedRelevanceScorer } from './services/enhanced-relevance-scorer.js';
@@ -41,8 +41,8 @@ export class NewsAggregator {
       // Fetch from RSS feeds (primary source)
       const rssNews = await this.fetchFromRSSFeeds(limit * 2);
       
-      // Fetch from APIs if enabled (API keys can come from options.env)
-      const apiNews = await this.fetchFromAPIs(limit, env);
+      // Fetch from APIs if enabled (API keys can come from options.env); pass sort/time for efficient trending
+      const apiNews = await this.fetchFromAPIs(limit, env, { sortBy, timeFilter });
       
       // Combine and deduplicate using enhanced deduplication
       const allNews = deduplicateArticles([...rssNews, ...apiNews], 0.75);
@@ -336,8 +336,8 @@ export class NewsAggregator {
     }
   }
 
-  // Fetch from news APIs (env provides runtime keys e.g. NEWSAPI_KEY)
-  async fetchFromAPIs(limit, env = {}) {
+  // Fetch from news APIs (env provides runtime keys e.g. NEWSAPI_KEY; apiOptions = { sortBy, timeFilter })
+  async fetchFromAPIs(limit, env = {}, apiOptions = {}) {
     const enabledAPIs = NEWS_SOURCES.NEWS_APIS
       .filter(api => {
         if (!api.enabled) return false;
@@ -349,7 +349,7 @@ export class NewsAggregator {
         apiKey: api.apiKey || (api.name === 'NewsAPI' ? env.NEWSAPI_KEY : null)
       }))
       .filter(api => api.apiKey);
-    const newsPromises = enabledAPIs.map(api => this.fetchFromAPI(api, limit));
+    const newsPromises = enabledAPIs.map(api => this.fetchFromAPI(api, limit, apiOptions));
     
     try {
       const results = await Promise.allSettled(newsPromises);
@@ -363,17 +363,26 @@ export class NewsAggregator {
     }
   }
 
-  // Fetch from individual API
-  async fetchFromAPI(api, limit) {
+  // Fetch from individual API (apiOptions = { sortBy, timeFilter } for NewsAPI trending + recency)
+  async fetchFromAPI(api, limit, apiOptions = {}) {
     try {
       let url = api.url;
       const params = new URLSearchParams();
-      
+      const { sortBy = 'relevance', timeFilter = '24h' } = apiOptions;
+
       if (api.name === 'NewsAPI') {
-        params.append('q', 'bitcoin OR ethereum OR cryptocurrency OR blockchain OR defi OR NFT OR web3 OR crypto OR token');
-        params.append('sortBy', 'publishedAt');
+        // Focused query to reduce noise from other industries; request only what we need
+        params.append('q', 'bitcoin OR ethereum OR cryptocurrency OR blockchain OR defi OR "web3" OR "crypto market"');
         params.append('language', 'en');
-        params.append('pageSize', Math.min(Math.max(limit, 10), 100));
+        // Cap request size: we merge with RSS and slice to limit; 20–25 is enough
+        const pageSize = Math.min(Math.max(limit, 10), 25);
+        params.append('pageSize', pageSize);
+        // Trending: use popularity when sortBy is engagement; else relevancy or publishedAt
+        const newsApiSort = (sortBy === 'engagement' || sortBy === 'trending') ? 'popularity' : (sortBy === 'date' ? 'publishedAt' : 'relevancy');
+        params.append('sortBy', newsApiSort);
+        // Date filter: only recent articles to save quota and surface trending
+        const fromDate = this.newsApiFromDate(timeFilter);
+        if (fromDate) params.append('from', fromDate);
         params.append('apiKey', api.apiKey);
       } else if (api.name === 'GNews') {
         params.append('q', 'bitcoin OR ethereum OR cryptocurrency');
@@ -407,7 +416,11 @@ export class NewsAggregator {
         }
         
         const data = await response.json();
-        return this.transformAPIData(data, api);
+        let articles = this.transformAPIData(data, api);
+        if (api.name === 'NewsAPI') {
+          articles = articles.filter(a => this.isBlockchainRelevant(a));
+        }
+        return articles;
       } catch (fetchError) {
         clearTimeout(timeoutId);
         if (fetchError.name === 'AbortError') {
@@ -479,6 +492,28 @@ export class NewsAggregator {
     const keywords = CATEGORY_KEYWORDS[category] || [];
     
     return keywords.some(keyword => articleText.includes(keyword.toLowerCase()));
+  }
+
+  // NewsAPI from-date for recency (ISO 8601); reduces quota and surfaces trending only
+  newsApiFromDate(timeFilter) {
+    const now = Date.now();
+    const ms = {
+      '1h': 60 * 60 * 1000,
+      '24h': 24 * 60 * 60 * 1000,
+      '7d': 7 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000,
+      'today': 24 * 60 * 60 * 1000,
+      'week': 7 * 24 * 60 * 60 * 1000,
+      'month': 30 * 24 * 60 * 60 * 1000
+    };
+    const span = ms[timeFilter] || ms['24h'];
+    return new Date(now - span).toISOString().slice(0, 19) + 'Z';
+  }
+
+  // Keep only articles that clearly pertain to blockchain/crypto (avoids other industries)
+  isBlockchainRelevant(article) {
+    const text = ((article.title || '') + ' ' + (article.summary || '') + ' ' + (article.content || '')).toLowerCase();
+    return BLOCKCHAIN_CORE_TERMS.some(term => text.includes(term.toLowerCase()));
   }
 
   // Filter by time
