@@ -901,11 +901,19 @@ async function fetchBlockchainNews(limit, options = {}) {
     }
     // If we got very few articles (e.g. only one feed succeeded), merge with mock so feed is usable
     if (rawNews.length < 8) {
-      const needed = Math.max(0, limit - rawNews.length);
+      const maxAgeMs = 48 * 60 * 60 * 1000; // 48 hours
+      const cutoff = Date.now() - maxAgeMs;
+      const recent = rawNews.filter((a) => {
+        if (!a.published_at) return false;
+        const t = new Date(a.published_at).getTime();
+        return !isNaN(t) && t >= cutoff;
+      });
+      const toMerge = recent.length > 0 ? recent : [];
+      const needed = Math.max(0, limit - toMerge.length);
       const mock = getMockNews(needed);
-      const combined = [...rawNews, ...mock].slice(0, limit);
-      combined.sort((a, b) => (b.published_at && a.published_at) ? (new Date(b.published_at) - new Date(a.published_at)) : 0);
-      console.log(`Few articles (${rawNews.length}); merged with mock to return ${combined.length}`);
+      const combined = [...toMerge, ...mock].slice(0, limit);
+      combined.sort((a, b) => (new Date(b.published_at || 0).getTime()) - (new Date(a.published_at || 0).getTime()));
+      console.log(`Few articles (${rawNews.length}, ${toMerge.length} recent); merged with mock to return ${combined.length}`);
       return combined.map((article, index) => {
         try {
           const cleanUrl = (article.url || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
@@ -970,12 +978,11 @@ async function fetchBlockchainNews(limit, options = {}) {
       }
     });
     
-    // Sort by basic relevance (published_at or engagement if available)
+    // Sort by published date (newest first); treat missing date as oldest
     quickProcessed.sort((a, b) => {
-      // Sort by published date (newest first) or relevance score
-      if (b.published_at && a.published_at) {
-        return new Date(b.published_at) - new Date(a.published_at);
-      }
+      const ta = new Date(a.published_at || 0).getTime();
+      const tb = new Date(b.published_at || 0).getTime();
+      if (tb !== ta) return tb - ta;
       return (b.relevance_score || 0) - (a.relevance_score || 0);
     });
     
