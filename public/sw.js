@@ -1,8 +1,8 @@
 // Service Worker for BlockchainVibe PWA
 // Provides offline support and caching
 
-const CACHE_NAME = 'blockchainvibe-v4';
-const RUNTIME_CACHE = 'blockchainvibe-runtime-v4';
+const CACHE_NAME = 'blockchainvibe-v5';
+const RUNTIME_CACHE = 'blockchainvibe-runtime-v5';
 
 // Only cache non-document assets on install (don't cache / or index.html so refresh gets latest)
 const STATIC_ASSETS = [
@@ -45,30 +45,21 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Fetch event - network-first for document so normal refresh gets latest build; cache-first for hashed assets
+// Fetch event: do NOT intercept document/navigation - let the browser handle it so
+// normal refresh always gets latest index.html and script tags (no stale app shell).
+// Only cache static assets (hashed JS/CSS) for performance.
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip cross-origin requests
   if (url.origin !== location.origin) {
     return;
   }
 
-  // Navigation/document: always fetch from network so normal refresh gets latest deployment.
-  // Only serve cached index.html when actually offline; when online, never serve stale HTML.
+  // Never intercept document/navigation requests - browser fetches index.html natively
+  // and respects Cache-Control (no-cache from _headers), so users always get latest deployment.
   const isDocument = request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html';
   if (isDocument) {
-    event.respondWith(
-      fetch(request, { cache: 'no-store' })
-        .then((response) => response)
-        .catch(() => {
-          if (!self.navigator.onLine) {
-            return caches.match(request).then((cached) => cached || caches.match('/index.html'));
-          }
-          return Promise.reject(new Error('Network error'));
-        })
-    );
     return;
   }
 

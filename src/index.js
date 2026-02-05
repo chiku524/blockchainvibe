@@ -16,9 +16,12 @@ if ('serviceWorker' in navigator) {
       .register('/sw.js')
       .then((registration) => {
         console.log('Service Worker registered successfully:', registration.scope);
-        // Check for updates on every page load so users get latest deployment without hard refresh
         registration.update();
         setInterval(() => registration.update(), 60 * 60 * 1000);
+        // When a new SW takes control, reload so the page runs the latest app (fixes stale nav/shell)
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          window.location.reload();
+        });
       })
       .catch((error) => {
         console.log('Service Worker registration failed:', error);
