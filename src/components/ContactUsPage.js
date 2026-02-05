@@ -330,26 +330,34 @@ const ContactUsPage = () => {
             </h2>
             <ContactForm onSubmit={handleSubmit}>
               <FormGroup>
-                <FormLabel>Name *</FormLabel>
+                <FormLabel htmlFor="contact-name">Name *</FormLabel>
                 <FormInput
+                  id="contact-name"
+                  name="name"
                   type="text"
                   required
+                  autoComplete="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </FormGroup>
               <FormGroup>
-                <FormLabel>Email *</FormLabel>
+                <FormLabel htmlFor="contact-email">Email *</FormLabel>
                 <FormInput
+                  id="contact-email"
+                  name="email"
                   type="email"
                   required
+                  autoComplete="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </FormGroup>
               <FormGroup>
-                <FormLabel>Category *</FormLabel>
+                <FormLabel htmlFor="contact-category">Category *</FormLabel>
                 <FormSelect
+                  id="contact-category"
+                  name="category"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 >
@@ -363,8 +371,10 @@ const ContactUsPage = () => {
                 </FormSelect>
               </FormGroup>
               <FormGroup>
-                <FormLabel>Priority</FormLabel>
+                <FormLabel htmlFor="contact-priority">Priority</FormLabel>
                 <FormSelect
+                  id="contact-priority"
+                  name="priority"
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                 >
@@ -375,8 +385,10 @@ const ContactUsPage = () => {
                 </FormSelect>
               </FormGroup>
               <FormGroup>
-                <FormLabel>Message *</FormLabel>
+                <FormLabel htmlFor="contact-message">Message *</FormLabel>
                 <FormTextarea
+                  id="contact-message"
+                  name="message"
                   required
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}

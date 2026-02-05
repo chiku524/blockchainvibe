@@ -408,14 +408,16 @@ const SignIn = () => {
         
         <AuthForm onSubmit={handleSubmit}>
           <FormGroup>
-            <FormLabel>Email Address</FormLabel>
+            <FormLabel htmlFor="signin-email">Email Address</FormLabel>
             <InputContainer>
               <InputIcon>
                 <Mail size={18} />
               </InputIcon>
               <FormInput
+                id="signin-email"
                 type="email"
                 name="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="Enter your email"
@@ -431,14 +433,16 @@ const SignIn = () => {
           </FormGroup>
           
           <FormGroup>
-            <FormLabel>Password</FormLabel>
+            <FormLabel htmlFor="signin-password">Password</FormLabel>
             <InputContainer>
               <InputIcon>
                 <Lock size={18} />
               </InputIcon>
               <FormInput
+                id="signin-password"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
+                autoComplete="current-password"
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="Enter your password"

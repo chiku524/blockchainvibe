@@ -641,7 +641,10 @@ const Settings = () => {
                   {['DeFi', 'NFTs', 'Layer 2', 'Web3', 'Gaming', 'CBDC', 'Regulation', 'Mining'].map(topic => (
                     <CheckboxItem key={topic}>
                       <input
+                        id={`topic-${topic.replace(/\s+/g, '-')}`}
+                        name="topics"
                         type="checkbox"
+                        value={topic}
                         checked={preferences.topics.includes(topic)}
                         onChange={() => handlePreferenceChange('topics', 'topics', topic)}
                       />
@@ -657,7 +660,10 @@ const Settings = () => {
                   {['CoinDesk', 'Decrypt', 'The Block', 'CoinTelegraph', 'CryptoSlate'].map(source => (
                     <CheckboxItem key={source}>
                       <input
+                        id={`source-${source.replace(/\s+/g, '-')}`}
+                        name="sources"
                         type="checkbox"
+                        value={source}
                         checked={preferences.sources.includes(source)}
                         onChange={() => handlePreferenceChange('sources', 'sources', source)}
                       />
@@ -668,8 +674,10 @@ const Settings = () => {
               </FormGroup>
 
               <FormGroup>
-                <Label>Update Frequency</Label>
-                <Select 
+                <Label htmlFor="preferences-frequency">Update Frequency</Label>
+                <Select
+                  id="preferences-frequency"
+                  name="frequency"
                   value={preferences.frequency}
                   onChange={(e) => handlePreferenceChange('preferences', 'frequency', e.target.value)}
                 >
@@ -692,11 +700,13 @@ const Settings = () => {
               <FormGroup>
                 <CheckboxItem>
                   <input
+                    id="notifications-enabled"
+                    name="notifications"
                     type="checkbox"
                     checked={preferences.notifications}
                     onChange={(e) => handlePreferenceChange('preferences', 'notifications', e.target.checked)}
                   />
-                  Enable push notifications
+                  <label htmlFor="notifications-enabled">Enable push notifications</label>
                 </CheckboxItem>
               </FormGroup>
             </>
@@ -712,6 +722,8 @@ const Settings = () => {
               <FormGroup>
                 <CheckboxItem>
                   <input
+                    id="dark-mode"
+                    name="darkMode"
                     type="checkbox"
                     checked={preferences.darkMode}
                     onChange={(e) => {
@@ -721,7 +733,7 @@ const Settings = () => {
                       }
                     }}
                   />
-                  Dark mode
+                  <label htmlFor="dark-mode">Dark mode</label>
                 </CheckboxItem>
               </FormGroup>
             </>

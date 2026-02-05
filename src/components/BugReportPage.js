@@ -308,8 +308,10 @@ ${formData.environment}
           <FormTitle>Bug Report Form</FormTitle>
           
           <FormGroup>
-            <FormLabel>Bug Title *</FormLabel>
+            <FormLabel htmlFor="bug-title">Bug Title *</FormLabel>
             <FormInput
+              id="bug-title"
+              name="title"
               type="text"
               required
               placeholder="Brief description of the bug"
@@ -319,8 +321,10 @@ ${formData.environment}
           </FormGroup>
 
           <FormGroup>
-            <FormLabel>Category *</FormLabel>
+            <FormLabel htmlFor="bug-category">Category *</FormLabel>
             <FormSelect
+              id="bug-category"
+              name="category"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             >
@@ -335,8 +339,10 @@ ${formData.environment}
           </FormGroup>
 
           <FormGroup>
-            <FormLabel>Priority</FormLabel>
+            <FormLabel htmlFor="bug-priority">Priority</FormLabel>
             <FormSelect
+              id="bug-priority"
+              name="priority"
               value={formData.priority}
               onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
             >
@@ -348,8 +354,10 @@ ${formData.environment}
           </FormGroup>
 
           <FormGroup>
-            <FormLabel>Description *</FormLabel>
+            <FormLabel htmlFor="bug-description">Description *</FormLabel>
             <FormTextarea
+              id="bug-description"
+              name="description"
               required
               placeholder="Clear description of what happened vs. what you expected"
               value={formData.description}
@@ -358,8 +366,10 @@ ${formData.environment}
           </FormGroup>
 
           <FormGroup>
-            <FormLabel>Steps to Reproduce *</FormLabel>
+            <FormLabel htmlFor="bug-steps">Steps to Reproduce *</FormLabel>
             <FormTextarea
+              id="bug-steps"
+              name="steps"
               required
               placeholder="1. First step&#10;2. Second step&#10;3. Third step"
               value={formData.steps}
@@ -368,8 +378,10 @@ ${formData.environment}
           </FormGroup>
 
           <FormGroup>
-            <FormLabel>Expected Behavior *</FormLabel>
+            <FormLabel htmlFor="bug-expected">Expected Behavior *</FormLabel>
             <FormTextarea
+              id="bug-expected"
+              name="expected"
               required
               placeholder="What should happen"
               value={formData.expected}
@@ -378,8 +390,10 @@ ${formData.environment}
           </FormGroup>
 
           <FormGroup>
-            <FormLabel>Actual Behavior *</FormLabel>
+            <FormLabel htmlFor="bug-actual">Actual Behavior *</FormLabel>
             <FormTextarea
+              id="bug-actual"
+              name="actual"
               required
               placeholder="What actually happened"
               value={formData.actual}
@@ -388,8 +402,10 @@ ${formData.environment}
           </FormGroup>
 
           <FormGroup>
-            <FormLabel>Environment</FormLabel>
+            <FormLabel htmlFor="bug-environment">Environment</FormLabel>
             <FormTextarea
+              id="bug-environment"
+              name="environment"
               placeholder="Browser: Chrome 120&#10;OS: Windows 11&#10;Device: Desktop"
               value={formData.environment}
               onChange={(e) => setFormData({ ...formData, environment: e.target.value })}
@@ -397,8 +413,10 @@ ${formData.environment}
           </FormGroup>
 
           <FormGroup>
-            <FormLabel>Frequency</FormLabel>
+            <FormLabel htmlFor="bug-frequency">Frequency</FormLabel>
             <FormSelect
+              id="bug-frequency"
+              name="frequency"
               value={formData.frequency}
               onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
             >
