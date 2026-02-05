@@ -83,13 +83,13 @@ wrangler pages deploy ./build --project-name=blockchainvibe
 
 ### Worker secrets (optional)
 
-To enable **NewsAPI.org** as an additional news source (blockchain/crypto headlines), set the API key as a Worker secret (do not commit the key):
+To enable **NewsAPI.ai** (Event Registry) as a news source for blockchain/crypto headlines, set the API key as a Worker secret (do not commit the key):
 
 ```bash
 cd server && wrangler secret put NEWSAPI_KEY
 ```
 
-Paste your key when prompted. The aggregator uses it for `/v2/everything` when present.
+Paste your NewsAPI.ai key when prompted. The aggregator uses it for real-time article search (production-ready, 150k+ sources).
 
 ### Implemented
 

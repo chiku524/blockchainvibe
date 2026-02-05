@@ -535,13 +535,23 @@ export const NEWS_SOURCES = {
   // News APIs (Paid Services)
   NEWS_APIS: [
     {
-      name: "NewsAPI",
-      url: "https://newsapi.org/v2/everything",
-      apiKey: null, // Injected at runtime from env.NEWSAPI_KEY (wrangler secret)
+      name: "NewsAPI_ai",
+      url: "https://eventregistry.org/api/v1/article/getArticles",
+      apiKey: null, // Injected from env.NEWSAPI_KEY (newsapi.ai / Event Registry)
       enabled: true,
-      rateLimit: 1000, // requests per day
-      cost: "Free tier: 1000 requests/day",
-      priority: 1
+      rateLimit: 2000, // free tier
+      cost: "Free: 2000 searches; paid from $90/mo",
+      priority: 1,
+      _note: "newsapi.ai - real-time, 150k+ sources, full content, sentiment, production-ready"
+    },
+    {
+      name: "NewsAPI_org",
+      url: "https://newsapi.org/v2/everything",
+      apiKey: null,
+      enabled: false, // Developer plan = localhost only; use NewsAPI_ai for production
+      rateLimit: 100,
+      cost: "Developer: localhost only",
+      priority: 2
     },
     {
       name: "GNews",

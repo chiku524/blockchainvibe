@@ -341,12 +341,12 @@ export class NewsAggregator {
     const enabledAPIs = NEWS_SOURCES.NEWS_APIS
       .filter(api => {
         if (!api.enabled) return false;
-        if (api.name === 'NewsAPI') return !!(api.apiKey || env.NEWSAPI_KEY);
+        if (api.name === 'NewsAPI_ai' || api.name === 'NewsAPI_org') return !!(api.apiKey || env.NEWSAPI_KEY);
         return !!api.apiKey;
       })
       .map(api => ({
         ...api,
-        apiKey: api.apiKey || (api.name === 'NewsAPI' ? env.NEWSAPI_KEY : null)
+        apiKey: api.apiKey || ((api.name === 'NewsAPI_ai' || api.name === 'NewsAPI_org') ? env.NEWSAPI_KEY : null)
       }))
       .filter(api => api.apiKey);
     const newsPromises = enabledAPIs.map(api => this.fetchFromAPI(api, limit, apiOptions));
@@ -363,24 +363,63 @@ export class NewsAggregator {
     }
   }
 
-  // Fetch from individual API (apiOptions = { sortBy, timeFilter } for NewsAPI trending + recency)
+  // Fetch from NewsAPI.ai (Event Registry) - POST, blockchain/crypto, production-ready
+  async fetchFromNewsAPIAi(api, limit, sortBy, timeFilter) {
+    const articlesSortBy = (sortBy === 'engagement' || sortBy === 'trending') ? 'socialScore' : (sortBy === 'date' ? 'date' : 'rel');
+    const dateStart = this.newsApiFromDate(timeFilter);
+    const body = {
+      resultType: 'articles',
+      keyword: ['Bitcoin', 'Ethereum', 'cryptocurrency', 'blockchain', 'DeFi', 'NFT', 'web3'],
+      keywordOper: 'or',
+      lang: 'eng',
+      articlesSortBy,
+      articlesCount: Math.min(Math.max(limit, 10), 100),
+      apiKey: api.apiKey
+    };
+    if (dateStart) body.dateStart = dateStart.slice(0, 10);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.feedTimeout);
+    try {
+      const response = await fetch(api.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'User-Agent': 'BlockchainVibe/1.0' },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error(`NewsAPI.ai returned ${response.status}`);
+      const data = await response.json();
+      const raw = data.articles?.results || [];
+      const articles = this.transformNewsAPIAiData(raw, api);
+      return articles.filter(a => this.isBlockchainRelevant(a));
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') console.warn('[NewsAPI.ai] timed out');
+      else console.error('[NewsAPI.ai]', err.message || err);
+      return [];
+    }
+  }
+
+  // Fetch from individual API (apiOptions = { sortBy, timeFilter } for trending + recency)
   async fetchFromAPI(api, limit, apiOptions = {}) {
     try {
-      let url = api.url;
-      const params = new URLSearchParams();
       const { sortBy = 'relevance', timeFilter = '24h' } = apiOptions;
 
-      if (api.name === 'NewsAPI') {
-        // Focused query to reduce noise from other industries; request only what we need
+      if (api.name === 'NewsAPI_ai') {
+        return await this.fetchFromNewsAPIAi(api, limit, sortBy, timeFilter);
+      }
+
+      let url = api.url;
+      const params = new URLSearchParams();
+
+      if (api.name === 'NewsAPI_org') {
         params.append('q', 'bitcoin OR ethereum OR cryptocurrency OR blockchain OR defi OR "web3" OR "crypto market"');
         params.append('language', 'en');
-        // Cap request size: we merge with RSS and slice to limit; 20–25 is enough
         const pageSize = Math.min(Math.max(limit, 10), 25);
         params.append('pageSize', pageSize);
-        // Trending: use popularity when sortBy is engagement; else relevancy or publishedAt
         const newsApiSort = (sortBy === 'engagement' || sortBy === 'trending') ? 'popularity' : (sortBy === 'date' ? 'publishedAt' : 'relevancy');
         params.append('sortBy', newsApiSort);
-        // Date filter: only recent articles to save quota and surface trending
         const fromDate = this.newsApiFromDate(timeFilter);
         if (fromDate) params.append('from', fromDate);
         params.append('apiKey', api.apiKey);
@@ -416,14 +455,14 @@ export class NewsAggregator {
         }
         
         const data = await response.json();
-        if (api.name === 'NewsAPI') {
+        if (api.name === 'NewsAPI_org') {
           if (data.status !== 'ok') {
-            console.warn('[NewsAPI]', data.code || 'error', data.message || '');
+            console.warn('[NewsAPI.org]', data.code || 'error', data.message || '');
             return [];
           }
         }
         let articles = this.transformAPIData(data, api);
-        if (api.name === 'NewsAPI') {
+        if (api.name === 'NewsAPI_org') {
           articles = articles.filter(a => this.isBlockchainRelevant(a));
         }
         return articles;
@@ -441,11 +480,43 @@ export class NewsAggregator {
     }
   }
 
+  // Transform NewsAPI.ai (Event Registry) response to our format
+  transformNewsAPIAiData(raw, api) {
+    return raw.map((a, idx) => {
+      const url = a.url || '';
+      const authorName = Array.isArray(a.authors) && a.authors[0] ? a.authors[0].name : null;
+      const text = ((a.title || '') + ' ' + (a.body || '')).trim();
+      return {
+        id: this.safeArticleId(url, 'NewsAPI_ai'),
+        title: a.title || 'Untitled',
+        url,
+        source: a.source?.title || a.source?.uri || 'News',
+        source_id: a.source?.uri || null,
+        published_at: a.dateTimePub || a.dateTime || a.date || new Date().toISOString(),
+        summary: (a.body || '').substring(0, 300),
+        content: a.body || '',
+        excerpt: (a.body || '').substring(0, 200),
+        categories: this.categorizeContent(text),
+        tags: this.extractTags(text),
+        image_url: a.image || null,
+        author: authorName,
+        relevance_score: (a.relevance != null) ? Math.min(1, a.relevance) : 0.5,
+        sentiment: a.sentiment,
+        _source_api: 'NewsAPI_ai',
+        engagement_metrics: {
+          likes: 0,
+          views: a.wgt || 0,
+          comments: 0
+        }
+      };
+    });
+  }
+
   // Transform API data to our format
   transformAPIData(data, api) {
     let articles = [];
     
-    if (api.name === 'NewsAPI') {
+    if (api.name === 'NewsAPI_org') {
       articles = Array.isArray(data.articles) ? data.articles : [];
     } else if (api.name === 'GNews') {
       articles = data.articles || [];
@@ -456,12 +527,12 @@ export class NewsAggregator {
     return articles.map((article, idx) => {
       const url = article.url || article.link;
       const rawId = article.url || article.id || `${api.name}-${Date.now()}-${idx}`;
-      const id = (api.name === 'NewsAPI' && url) ? this.safeArticleId(url, api.name) : rawId;
+      const id = (api.name === 'NewsAPI_org' && url) ? this.safeArticleId(url, api.name) : rawId;
       return {
         id,
         title: article.title || article.headline,
         url,
-        source: article.source?.name || api.name,
+        source: article.source?.name || article.source?.title || api.name,
         source_id: article.source?.id || null,
         published_at: article.publishedAt || article.created_at || new Date().toISOString(),
         summary: article.description || article.summary,
