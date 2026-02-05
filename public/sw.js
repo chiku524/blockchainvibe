@@ -1,8 +1,8 @@
 // Service Worker for BlockchainVibe PWA
 // Provides offline support and caching
 
-const CACHE_NAME = 'blockchainvibe-v5';
-const RUNTIME_CACHE = 'blockchainvibe-runtime-v5';
+const CACHE_NAME = 'blockchainvibe-v7';
+const RUNTIME_CACHE = 'blockchainvibe-runtime-v7';
 
 // Only cache non-document assets on install (don't cache / or index.html so refresh gets latest)
 const STATIC_ASSETS = [
@@ -56,8 +56,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Never intercept our own script - let browser always fetch latest sw.js so updates can install.
+  // (Otherwise an old SW would serve cached sw.js and the new SW would never activate.)
+  if (url.pathname === '/sw.js') {
+    return;
+  }
+
   // Never intercept document/navigation requests - browser fetches index.html natively
-  // and respects Cache-Control (no-cache from _headers), so users always get latest deployment.
+  // so users always get latest deployment (no stale layout/CSP/meta).
   const isDocument = request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html';
   if (isDocument) {
     return;
