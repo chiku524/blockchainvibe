@@ -1,8 +1,8 @@
 // Service Worker for BlockchainVibe PWA
 // Provides offline support and caching
 
-const CACHE_NAME = 'blockchainvibe-v3';
-const RUNTIME_CACHE = 'blockchainvibe-runtime-v3';
+const CACHE_NAME = 'blockchainvibe-v4';
+const RUNTIME_CACHE = 'blockchainvibe-runtime-v4';
 
 // Only cache non-document assets on install (don't cache / or index.html so refresh gets latest)
 const STATIC_ASSETS = [
@@ -55,13 +55,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navigation/document: always fetch from network with no-store so browser never serves stale HTML
+  // Navigation/document: always fetch from network so normal refresh gets latest deployment.
+  // Only serve cached index.html when actually offline; when online, never serve stale HTML.
   const isDocument = request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html';
   if (isDocument) {
     event.respondWith(
       fetch(request, { cache: 'no-store' })
         .then((response) => response)
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/index.html')))
+        .catch(() => {
+          if (!self.navigator.onLine) {
+            return caches.match(request).then((cached) => cached || caches.match('/index.html'));
+          }
+          return Promise.reject(new Error('Network error'));
+        })
     );
     return;
   }

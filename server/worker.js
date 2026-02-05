@@ -570,7 +570,7 @@ async function handleTrendingNews(request, env) {
     }), {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
         ...corsHeaders
       }
     });
@@ -588,7 +588,7 @@ async function handleTrendingNews(request, env) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
         ...corsHeaders
       }
     });
@@ -663,7 +663,7 @@ async function handlePersonalizedNews(request, env) {
     }), {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
         ...corsHeaders
       }
     });
@@ -682,7 +682,7 @@ async function handlePersonalizedNews(request, env) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
         ...corsHeaders
       }
     });
@@ -848,7 +848,7 @@ async function handleNews(request, env) {
     }), {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
         ...corsHeaders
       }
     });
@@ -1720,9 +1720,9 @@ export default {
         if (response.ok) {
           const body = await response.arrayBuffer();
           const headers = new Headers(response.headers);
-          headers.set('Cache-Control', 'public, max-age=180');
+          headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
           ctx.waitUntil(caches.default.put(cacheKey, new Response(body, { status: response.status, headers })));
-          return new Response(body, { status: response.status, headers: response.headers });
+          return new Response(body, { status: response.status, headers });
         }
         return response;
       }

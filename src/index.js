@@ -16,11 +16,9 @@ if ('serviceWorker' in navigator) {
       .register('/sw.js')
       .then((registration) => {
         console.log('Service Worker registered successfully:', registration.scope);
-        
-        // Check for updates periodically
-        setInterval(() => {
-          registration.update();
-        }, 60 * 60 * 1000); // Check every hour
+        // Check for updates on every page load so users get latest deployment without hard refresh
+        registration.update();
+        setInterval(() => registration.update(), 60 * 60 * 1000);
       })
       .catch((error) => {
         console.log('Service Worker registration failed:', error);

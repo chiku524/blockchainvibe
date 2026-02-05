@@ -1,17 +1,13 @@
 import axios from 'axios';
 
-// Get API URL from environment variables with fallback
+const PRODUCTION_API_URL = 'https://blockchainvibe-api.nico-chikuji.workers.dev';
+
+// Get API URL: production builds always use prod API; development uses REACT_APP_API_URL (e.g. localhost)
 const getApiUrl = () => {
-  // Check for environment variable first
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.REACT_APP_API_URL_PROD || PRODUCTION_API_URL;
   }
-  // Fallback to production URL if in production
-  if (process.env.NODE_ENV === 'production' && process.env.REACT_APP_API_URL_PROD) {
-    return process.env.REACT_APP_API_URL_PROD;
-  }
-  // Final fallback
-  return process.env.REACT_APP_API_URL_PROD || 'https://blockchainvibe-api.nico-chikuji.workers.dev';
+  return process.env.REACT_APP_API_URL || process.env.REACT_APP_API_URL_PROD || PRODUCTION_API_URL;
 };
 
 const API_BASE_URL = getApiUrl();
