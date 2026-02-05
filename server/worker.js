@@ -899,7 +899,8 @@ async function fetchBlockchainNews(limit, options = {}) {
       console.log('No RSS news found, falling back to mock data');
       return getMockNews(limit);
     }
-    // If we got very few articles (e.g. only one feed succeeded), merge with mock so feed is usable
+    // If we got very few articles (e.g. only one feed succeeded), merge with mock so feed is usable.
+    // Real articles first (newest first), then mock only to fill remaining slots - never sort mock to top.
     if (rawNews.length < 8) {
       const maxAgeMs = 48 * 60 * 60 * 1000; // 48 hours
       const cutoff = Date.now() - maxAgeMs;
@@ -909,10 +910,10 @@ async function fetchBlockchainNews(limit, options = {}) {
         return !isNaN(t) && t >= cutoff;
       });
       const toMerge = recent.length > 0 ? recent : [];
+      toMerge.sort((a, b) => (new Date(b.published_at || 0).getTime()) - (new Date(a.published_at || 0).getTime()));
       const needed = Math.max(0, limit - toMerge.length);
       const mock = getMockNews(needed);
       const combined = [...toMerge, ...mock].slice(0, limit);
-      combined.sort((a, b) => (new Date(b.published_at || 0).getTime()) - (new Date(a.published_at || 0).getTime()));
       console.log(`Few articles (${rawNews.length}, ${toMerge.length} recent); merged with mock to return ${combined.length}`);
       return combined.map((article, index) => {
         try {
