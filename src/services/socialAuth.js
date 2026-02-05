@@ -478,8 +478,8 @@ class SocialAuthService {
       localStorage.setItem('refresh_token', refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
       
-      // Show success message
-      alert(`Demo ${provider} authentication successful! Redirecting to dashboard...`);
+      // Show success message — user is in demo mode (OAuth not configured)
+      alert(`Demo mode: You're signed in as a demo ${provider} user. OAuth is not configured for production sign-in. Configure OAuth client IDs to enable real authentication.`);
       
       // Redirect to dashboard
       setTimeout(() => {

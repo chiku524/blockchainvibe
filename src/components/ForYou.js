@@ -411,37 +411,42 @@ const ForYou = () => {
     toast.success('For You feed refreshed!');
   };
 
-  const [mockStats, setStats] = useState({ relevanceScore: '—', articlesRead: 0, savedArticles: 0, readingStreak: '—' });
+  const [stats, setStats] = useState({ relevanceScore: '—', articlesRead: '—', savedArticles: '—', readingStreak: '—', statsAvailable: false });
   const [insights, setInsights] = useState({ peakHour: null, avgReadSec: 0, topSource: '—' });
   useEffect(() => {
     (async () => {
       try {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const userId = user?.user_id || user?.id;
-        if (!userId) return;
-        const res = await fetch(`https://blockchainvibe-api.nico-chikuji.workers.dev/api/analytics/summary?userId=${encodeURIComponent(userId)}`);
+        if (!userId) {
+          setStats(prev => ({ ...prev, relevanceScore: '—', articlesRead: '—', savedArticles: '—', readingStreak: '—', statsAvailable: false }));
+          return;
+        }
+        const res = await fetch(`${process.env.REACT_APP_API_URL_PROD || 'https://blockchainvibe-api.nico-chikuji.workers.dev'}/api/analytics/summary?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
+        if (!res.ok || !data?.success) {
+          setStats(prev => ({ ...prev, statsAvailable: false }));
+          return;
+        }
         setStats({
           relevanceScore: '—',
-          articlesRead: data?.articlesRead || 0,
-          savedArticles: 0,
-          readingStreak: '—'
+          articlesRead: data.articlesRead ?? 0,
+          savedArticles: '—',
+          readingStreak: '—',
+          statsAvailable: true
         });
         setInsights({
-          peakHour: data?.peakReadingHour,
-          avgReadSec: data?.avgReadSeconds || 0,
-          topSource: (data?.topSources && data.topSources[0]?.source) || '—'
+          peakHour: data.peakReadingHour ?? null,
+          avgReadSec: data.avgReadSeconds ?? 0,
+          topSource: (data.topSources && data.topSources[0]?.source) ? data.topSources[0].source : '—'
         });
-      } catch (_) {}
+      } catch (_) {
+        setStats(prev => ({ ...prev, statsAvailable: false }));
+      }
     })();
   }, []);
 
-  const userPreferences = [
-    { icon: <Target size={14} />, text: 'Favorite Topics', value: 'DeFi, NFTs, Layer 2' },
-    { icon: <Eye size={14} />, text: 'Reading Pattern', value: 'Morning Reader' },
-    { icon: <Bookmark size={14} />, text: 'Preferred Sources', value: 'CoinDesk, Decrypt' },
-    { icon: <TrendingUp size={14} />, text: 'Engagement Level', value: 'High' }
-  ];
+  const userPreferencesNote = 'Sign in and read articles to see your preferences and insights here.';
 
   if (isLoading && page === 1) {
     return (
@@ -501,12 +506,18 @@ const ForYou = () => {
         </FilterControls>
       </ForYouHeader>
 
+      {(forYouData?.serviceUnavailable || forYouData?.message) && (
+        <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
+          <strong>Service notice:</strong> {forYouData?.message || 'News service is temporarily unavailable. Please try again later.'}
+        </div>
+      )}
+
       <StatsGrid>
         <StatCard>
           <StatIcon>
             <Target size={20} />
           </StatIcon>
-          <StatValue>{mockStats.relevanceScore}</StatValue>
+          <StatValue>{stats.relevanceScore}</StatValue>
           <StatLabel>Relevance Score</StatLabel>
         </StatCard>
         
@@ -514,7 +525,7 @@ const ForYou = () => {
           <StatIcon>
             <Eye size={20} />
           </StatIcon>
-          <StatValue>{mockStats.articlesRead}</StatValue>
+          <StatValue>{typeof stats.articlesRead === 'number' ? stats.articlesRead : '—'}</StatValue>
           <StatLabel>Articles Read</StatLabel>
         </StatCard>
         
@@ -522,7 +533,7 @@ const ForYou = () => {
           <StatIcon>
             <Bookmark size={20} />
           </StatIcon>
-          <StatValue>{mockStats.savedArticles}</StatValue>
+          <StatValue>{stats.savedArticles}</StatValue>
           <StatLabel>Saved Articles</StatLabel>
         </StatCard>
         
@@ -530,7 +541,7 @@ const ForYou = () => {
           <StatIcon>
             <TrendingUp size={20} />
           </StatIcon>
-          <StatValue>{mockStats.readingStreak}</StatValue>
+          <StatValue>{stats.readingStreak}</StatValue>
           <StatLabel>Day Streak</StatLabel>
         </StatCard>
       </StatsGrid>
@@ -573,7 +584,7 @@ const ForYou = () => {
                     onLike={() => {}}
                     onShare={() => {}}
                     showRelevance={true}
-                    relevanceScore={95 - (index * 2)}
+                    relevanceScore={article.relevance_score != null ? Math.round((article.relevance_score || 0) * 100) : null}
                   />
                 </motion.div>
               ))}
@@ -601,15 +612,10 @@ const ForYou = () => {
           <SidebarCard>
             <SidebarTitle>Your Preferences</SidebarTitle>
             <PreferenceList>
-              {userPreferences.map((pref, index) => (
-                <PreferenceItem key={index}>
-                  <PreferenceIcon>
-                    {pref.icon}
-                  </PreferenceIcon>
-                  <PreferenceText>{pref.text}</PreferenceText>
-                  <PreferenceValue>{pref.value}</PreferenceValue>
-                </PreferenceItem>
-              ))}
+              <PreferenceItem>
+                <PreferenceIcon><Target size={14} /></PreferenceIcon>
+                <PreferenceText>{userPreferencesNote}</PreferenceText>
+              </PreferenceItem>
             </PreferenceList>
           </SidebarCard>
 

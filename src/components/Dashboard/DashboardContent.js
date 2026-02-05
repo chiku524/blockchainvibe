@@ -475,19 +475,18 @@ const DashboardContent = () => {
     }
   };
 
-  const trendingTopics = [
-    'Bitcoin ETF Approval',
-    'Ethereum Layer 2 Scaling',
-    'DeFi Yield Farming',
-    'NFT Market Recovery',
-    'Web3 Gaming Boom',
-    'CBDC Development'
-  ];
-
-  // Don't show full loading spinner - show skeleton loaders instead
+  const trendingTopicLabels = (newsData?.articles && Array.isArray(newsData.articles))
+    ? [...new Set(newsData.articles.flatMap(a => (a.categories || []).filter(Boolean)))].slice(0, 6)
+    : [];
+  const dashboardServiceUnavailable = newsData?.serviceUnavailable || newsData?.message;
 
   return (
     <DashboardContainer>
+      {dashboardServiceUnavailable && (
+        <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
+          <strong>Service notice:</strong> {newsData?.message || 'News service is temporarily unavailable. Please try again later.'}
+        </div>
+      )}
       <Header>
         <div>
           <Title>Welcome back, {user?.name || 'User'}!</Title>
@@ -609,12 +608,14 @@ const DashboardContent = () => {
           <SidebarCard>
             <SidebarTitle>Trending Topics</SidebarTitle>
             <TrendingList>
-              {trendingTopics.map((topic, index) => (
-                <TrendingItem key={index} onClick={() => navigate(`/search?q=${encodeURIComponent(topic)}`)}>
+              {trendingTopicLabels.length > 0 ? trendingTopicLabels.map((topic, index) => (
+                <TrendingItem key={topic} onClick={() => navigate(`/search?q=${encodeURIComponent(topic)}`)}>
                   <TrendingNumber>{index + 1}</TrendingNumber>
                   <TrendingText>{topic}</TrendingText>
                 </TrendingItem>
-              ))}
+              )) : (
+                <span style={{ color: 'var(--text-secondary, #64748b)', fontSize: '0.875rem' }}>Topics from your feed appear here.</span>
+              )}
             </TrendingList>
           </SidebarCard>
 
@@ -623,11 +624,11 @@ const DashboardContent = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Reading Streak</span>
-                <span style={{ color: '#10b981', fontWeight: 'bold' }}>7 days</span>
+                <span style={{ color: '#10b981', fontWeight: 'bold' }}>—</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Favorite Topic</span>
-                <span style={{ color: '#3b82f6' }}>DeFi</span>
+                <span style={{ color: '#3b82f6' }}>{trendingTopicLabels[0] || '—'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Time Spent</span>

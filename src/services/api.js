@@ -123,9 +123,8 @@ export const launchesAPI = {
 
 export const userAPI = {
   getProfile: async () => {
-    // Get user from localStorage or use demo user as fallback
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userId = user?.user_id || user?.id || 'demo_user';
+    const userId = user?.user_id || user?.id || 'demo_user'; // Unauthenticated requests use demo_user; UI should prompt sign-in where needed
     const response = await api.get(`/user/profile?userId=${userId}`);
     return response.data?.user || null;
   },
@@ -140,7 +139,7 @@ export const userAPI = {
 
   updatePreferences: async (preferences) => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userId = user?.user_id || user?.id || 'demo_user';
+    const userId = user?.user_id || user?.id || 'demo_user'; // Unauthenticated: demo_user
     const response = await api.post('/user/preferences', {
       user_id: userId,
       preferences

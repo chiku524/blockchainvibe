@@ -378,20 +378,28 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
   }
 
   if (!allNews || allNews.length === 0) {
+    const serviceUnavailable = newsData?.serviceUnavailable || newsData?.message;
     return (
       <FeedContainer>
+        {serviceUnavailable && (
+          <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
+            <strong>Service notice:</strong> {newsData?.message || 'News service is temporarily unavailable. Please try again later.'}
+          </div>
+        )}
         <EmptyState>
           <EmptyStateIcon>📰</EmptyStateIcon>
-          <EmptyStateTitle>No News Found</EmptyStateTitle>
+          <EmptyStateTitle>{serviceUnavailable ? 'News Service Unavailable' : 'No News Found'}</EmptyStateTitle>
           <EmptyStateDescription>
-            {searchQuery 
-              ? `No news found for "${searchQuery}". Try a different search term.`
-              : 'No news available for the selected filters. Try adjusting your preferences.'
+            {serviceUnavailable
+              ? (newsData?.message || 'News service is temporarily unavailable. Please try again in a few minutes.')
+              : searchQuery
+                ? `No news found for "${searchQuery}". Try a different search term.`
+                : 'No news available for the selected filters. Try adjusting your preferences.'
             }
           </EmptyStateDescription>
           <ControlButton onClick={handleRefresh}>
             <RefreshCw size={18} />
-            Refresh
+            Try Again
           </ControlButton>
         </EmptyState>
       </FeedContainer>
@@ -401,8 +409,15 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
   const featuredNews = allNews[0];
   const regularNews = allNews.slice(1);
 
+  const serviceUnavailable = newsData?.serviceUnavailable || newsData?.message;
+
   return (
     <FeedContainer>
+      {serviceUnavailable && (
+        <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
+          <strong>Service notice:</strong> {newsData?.message || 'News service is temporarily unavailable. Please try again later.'}
+        </div>
+      )}
       <FeedHeader>
         <div>
           <FeedTitle>

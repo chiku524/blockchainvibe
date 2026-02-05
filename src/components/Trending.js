@@ -398,16 +398,9 @@ const Trending = () => {
   );
 
 
-  const trendingTopics = [
-    'Bitcoin ETF Approval',
-    'Ethereum Layer 2 Scaling',
-    'DeFi Yield Farming',
-    'NFT Market Recovery',
-    'Web3 Gaming Boom',
-    'CBDC Development',
-    'Cross-chain Bridges',
-    'DAO Governance'
-  ];
+  const trendingTopicLabels = allNews.length > 0
+    ? [...new Set(allNews.flatMap(a => (a.categories || []).filter(Boolean)))].slice(0, 8)
+    : [];
 
   useEffect(() => {
     if (trendingData?.articles) {
@@ -467,8 +460,15 @@ const Trending = () => {
     );
   }
 
+  const serviceUnavailable = trendingData?.serviceUnavailable || trendingData?.message;
+
   return (
     <TrendingContainer>
+      {serviceUnavailable && (
+        <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
+          <strong>Service notice:</strong> {trendingData?.message || 'News service is temporarily unavailable. Please try again later.'}
+        </div>
+      )}
       <TrendingHeader>
         <HeaderContent>
           <TrendingTitle>
@@ -609,24 +609,28 @@ const Trending = () => {
           <SidebarCard>
             <SidebarTitle>Trending Topics</SidebarTitle>
             <TrendingList>
-              {trendingTopics.map((topic, index) => (
-                <TrendingItem key={index}>
+              {trendingTopicLabels.length > 0 ? trendingTopicLabels.map((topic, index) => (
+                <TrendingItem key={topic}>
                   <TrendingNumber>{index + 1}</TrendingNumber>
                   <TrendingText>{topic}</TrendingText>
                 </TrendingItem>
-              ))}
+              )) : (
+                <TrendingText style={{ color: 'var(--text-secondary, #64748b)', fontSize: '0.875rem' }}>Topics appear from the articles in the feed above.</TrendingText>
+              )}
             </TrendingList>
           </SidebarCard>
 
           <SidebarCard>
             <SidebarTitle>Top Sources</SidebarTitle>
             <TrendingList>
-              {['CoinDesk', 'Decrypt', 'The Block', 'CoinTelegraph', 'CryptoSlate'].map((source, index) => (
-                <TrendingItem key={index}>
+              {uniqueSources > 0 ? Array.from(new Set(allNews.map(a => a.source).filter(Boolean))).slice(0, 5).map((source, index) => (
+                <TrendingItem key={source}>
                   <TrendingNumber>{index + 1}</TrendingNumber>
                   <TrendingText>{source}</TrendingText>
                 </TrendingItem>
-              ))}
+              )) : (
+                <TrendingText style={{ color: 'var(--text-secondary, #64748b)', fontSize: '0.875rem' }}>Sources appear when articles are loaded.</TrendingText>
+              )}
             </TrendingList>
           </SidebarCard>
         </Sidebar>

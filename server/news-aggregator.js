@@ -628,25 +628,8 @@ export class NewsAggregator {
     return [...new Set(categories)]; // Remove duplicates
   }
 
-  // Fallback news when all sources fail
-  getFallbackNews(limit) {
-    return [
-      {
-        id: "fallback-1",
-        title: "Bitcoin Reaches New All-Time High",
-        url: "https://example.com/bitcoin-ath",
-        source: "CoinDesk",
-        published_at: new Date().toISOString(),
-        summary: "Bitcoin has reached a new all-time high driven by institutional adoption.",
-        content: "Bitcoin has reached a new all-time high driven by institutional adoption.",
-        excerpt: "Bitcoin has reached a new all-time high driven by institutional adoption.",
-        categories: ["bitcoin"],
-        tags: ["bitcoin", "price", "ath"],
-        image_url: null,
-        author: "CoinDesk",
-        relevance_score: 0.95,
-        engagement_metrics: { likes: 150, views: 2500, comments: 45 }
-      }
-    ].slice(0, limit);
+  // No dummy data when all sources fail; return empty so caller can show maintenance message
+  getFallbackNews(_limit) {
+    return [];
   }
 }

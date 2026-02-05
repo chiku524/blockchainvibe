@@ -559,15 +559,20 @@ async function handleTrendingNews(request, env) {
         userProfile: null // No personalization for trending
       }),
       25000, // 25 seconds timeout (before axios 30s timeout)
-      () => getMockNews(limit) // Fallback to mock news on timeout
+      () => [] // No mock data: return empty so frontend can show maintenance message
     );
     
-    return new Response(JSON.stringify({
+    const body = {
       articles: newsItems,
       total_count: newsItems.length,
       last_updated: new Date().toISOString(),
       type: 'trending'
-    }), {
+    };
+    if (newsItems.length === 0) {
+      body.serviceUnavailable = true;
+      body.message = 'News service is temporarily unavailable. Please try again in a few minutes.';
+    }
+    return new Response(JSON.stringify(body), {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -577,13 +582,13 @@ async function handleTrendingNews(request, env) {
     
   } catch (error) {
     console.error('Trending news API error:', error);
-    const fallbackNews = getMockNews(20);
     return new Response(JSON.stringify({
-      articles: fallbackNews,
-      total_count: fallbackNews.length,
+      articles: [],
+      total_count: 0,
       last_updated: new Date().toISOString(),
       type: 'trending',
-      warning: 'Using fallback data due to error'
+      serviceUnavailable: true,
+      message: 'News service is temporarily unavailable. Please try again in a few minutes.'
     }), {
       status: 200,
       headers: {
@@ -644,23 +649,28 @@ async function handlePersonalizedNews(request, env) {
         userProfile: userProfile
       }),
       25000, // 25 seconds timeout
-      () => getMockNews(limit) // Fallback to mock news on timeout
+      () => [] // No mock data: return empty so frontend can show maintenance message
     );
     
     // Calculate user relevance score (with timeout)
     const userRelevanceScore = await withTimeout(
       calculateUserRelevance(newsItems, userProfile, env),
       3000, // 3 seconds for relevance calculation
-      () => 0.5 // Default relevance score
+      () => 0
     );
     
-    return new Response(JSON.stringify({
+    const body = {
       articles: newsItems,
       total_count: newsItems.length,
       user_relevance_score: userRelevanceScore,
       last_updated: new Date().toISOString(),
       type: 'personalized'
-    }), {
+    };
+    if (newsItems.length === 0) {
+      body.serviceUnavailable = true;
+      body.message = 'News service is temporarily unavailable. Please try again in a few minutes.';
+    }
+    return new Response(JSON.stringify(body), {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -670,14 +680,14 @@ async function handlePersonalizedNews(request, env) {
     
   } catch (error) {
     console.error('Personalized news API error:', error);
-    const fallbackNews = getMockNews(20);
     return new Response(JSON.stringify({
-      articles: fallbackNews,
-      total_count: fallbackNews.length,
-      user_relevance_score: 0.5,
+      articles: [],
+      total_count: 0,
+      user_relevance_score: 0,
       last_updated: new Date().toISOString(),
       type: 'personalized',
-      warning: 'Using fallback data due to error'
+      serviceUnavailable: true,
+      message: 'News service is temporarily unavailable. Please try again in a few minutes.'
     }), {
       status: 200,
       headers: {
@@ -896,11 +906,10 @@ async function fetchBlockchainNews(limit, options = {}) {
     console.log('Raw news fetched:', rawNews.length, 'articles');
     
     if (rawNews.length === 0) {
-      console.log('No RSS news found, falling back to mock data');
-      return getMockNews(limit);
+      console.log('No RSS news found; returning empty so frontend can show maintenance message');
+      return [];
     }
-    // If we got very few articles (e.g. only one feed succeeded), merge with mock so feed is usable.
-    // Real articles first (newest first), then mock only to fill remaining slots - never sort mock to top.
+    // If we got very few articles, return only real articles (no mock/dummy data).
     if (rawNews.length < 8) {
       const maxAgeMs = 48 * 60 * 60 * 1000; // 48 hours
       const cutoff = Date.now() - maxAgeMs;
@@ -911,10 +920,8 @@ async function fetchBlockchainNews(limit, options = {}) {
       });
       const toMerge = recent.length > 0 ? recent : [];
       toMerge.sort((a, b) => (new Date(b.published_at || 0).getTime()) - (new Date(a.published_at || 0).getTime()));
-      const needed = Math.max(0, limit - toMerge.length);
-      const mock = getMockNews(needed);
-      const combined = [...toMerge, ...mock].slice(0, limit);
-      console.log(`Few articles (${rawNews.length}, ${toMerge.length} recent); merged with mock to return ${combined.length}`);
+      const combined = toMerge.slice(0, limit);
+      console.log(`Few articles (${rawNews.length}, ${toMerge.length} recent); returning ${combined.length} real articles only`);
       return combined.map((article, index) => {
         try {
           const cleanUrl = (article.url || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
@@ -993,98 +1000,8 @@ async function fetchBlockchainNews(limit, options = {}) {
     return quickProcessed;
   } catch (error) {
     console.error('Error fetching real news:', error);
-    console.log('Falling back to mock news');
-    // Fallback to mock data if real news fails
-    return getMockNews(limit);
+    return [];
   }
-}
-
-// Fallback mock news for 2025
-function getMockNews(limit) {
-  const mockNews = [
-    {
-      id: "1",
-      title: "Bitcoin ETF Approval Drives Institutional Adoption to New Heights",
-      url: "https://example.com/bitcoin-etf-2025",
-      source: "CoinDesk",
-      published_at: new Date().toISOString(),
-      summary: "The approval of multiple Bitcoin ETFs has led to unprecedented institutional adoption and price stability.",
-      content: "The approval of multiple Bitcoin ETFs has led to unprecedented institutional adoption and price stability, with major corporations adding Bitcoin to their treasury reserves.",
-      excerpt: "The approval of multiple Bitcoin ETFs has led to unprecedented institutional adoption and price stability.",
-      categories: ["bitcoin"],
-      tags: ["bitcoin", "etf", "institutional", "adoption"],
-      image_url: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400&h=200&fit=crop&crop=center",
-      author: "CoinDesk Staff",
-      relevance_score: 0.95,
-      engagement_metrics: { likes: 250, views: 5000, comments: 85 }
-    },
-    {
-      id: "2", 
-      title: "Ethereum 3.0 Upgrade Brings Quantum-Resistant Security",
-      url: "https://example.com/ethereum-3-0-2025",
-      source: "CoinTelegraph",
-      published_at: new Date(Date.now() - 3600000).toISOString(),
-      summary: "Ethereum's latest upgrade introduces quantum-resistant cryptography and improved scalability.",
-      content: "Ethereum's latest upgrade introduces quantum-resistant cryptography and improved scalability, making it future-proof against quantum computing threats.",
-      excerpt: "Ethereum's latest upgrade introduces quantum-resistant cryptography and improved scalability.",
-      categories: ["ethereum"],
-      tags: ["ethereum", "upgrade", "quantum-resistant", "security"],
-      image_url: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=200&fit=crop&crop=center",
-      author: "CoinTelegraph Staff",
-      relevance_score: 0.9,
-      engagement_metrics: { likes: 180, views: 3200, comments: 65 }
-    },
-    {
-      id: "3",
-      title: "DeFi 3.0 Protocols Achieve $500 Billion TVL Milestone",
-      url: "https://example.com/defi-3-0-2025",
-      source: "Decrypt",
-      published_at: new Date(Date.now() - 7200000).toISOString(),
-      summary: "Next-generation DeFi protocols have collectively locked over $500 billion in total value.",
-      content: "Next-generation DeFi protocols have collectively locked over $500 billion in total value, featuring advanced yield farming and cross-chain interoperability.",
-      excerpt: "Next-generation DeFi protocols have collectively locked over $500 billion in total value.",
-      categories: ["defi"],
-      tags: ["defi", "tvl", "yield-farming", "cross-chain"],
-      image_url: "https://images.unsplash.com/photo-1639322537228-f912b1770ae3?w=400&h=200&fit=crop&crop=center",
-      author: "Decrypt Staff",
-      relevance_score: 0.85,
-      engagement_metrics: { likes: 150, views: 2800, comments: 45 }
-    },
-    {
-      id: "4",
-      title: "AI-Powered NFTs Revolutionize Digital Art Market",
-      url: "https://example.com/ai-nfts-2025",
-      source: "The Block",
-      published_at: new Date(Date.now() - 10800000).toISOString(),
-      summary: "AI-generated NFTs are transforming the digital art market with dynamic, evolving artworks.",
-      content: "AI-generated NFTs are transforming the digital art market with dynamic, evolving artworks that change based on market conditions and user interactions.",
-      excerpt: "AI-generated NFTs are transforming the digital art market with dynamic, evolving artworks.",
-      categories: ["nft"],
-      tags: ["nft", "ai", "digital-art", "dynamic"],
-      image_url: "https://images.unsplash.com/photo-1642790104077-9a7b4a0a0f5a?w=400&h=200&fit=crop&crop=center",
-      author: "The Block Staff",
-      relevance_score: 0.8,
-      engagement_metrics: { likes: 120, views: 2200, comments: 38 }
-    },
-    {
-      id: "5",
-      title: "Central Bank Digital Currencies (CBDCs) Launch in Major Economies",
-      url: "https://example.com/cbdc-launch-2025",
-      source: "CryptoSlate",
-      published_at: new Date(Date.now() - 14400000).toISOString(),
-      summary: "Major economies have launched their Central Bank Digital Currencies, reshaping the global financial landscape.",
-      content: "Major economies have launched their Central Bank Digital Currencies, reshaping the global financial landscape and providing new opportunities for blockchain integration.",
-      excerpt: "Major economies have launched their Central Bank Digital Currencies, reshaping the global financial landscape.",
-      categories: ["regulation"],
-      tags: ["cbdc", "central-bank", "regulation", "digital-currency"],
-      image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=200&fit=crop&crop=center",
-      author: "CryptoSlate Staff",
-      relevance_score: 0.75,
-      engagement_metrics: { likes: 95, views: 1800, comments: 25 }
-    }
-  ];
-  
-  return mockNews.slice(0, limit);
 }
 
 // Simulate SingularityNET MeTTa relevance calculation
