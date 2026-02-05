@@ -557,7 +557,7 @@ async function handleTrendingNews(request, env) {
         timeFilter: timeFilter || 'all', // Convert null to 'all' for backend compatibility
         sortBy: sortBy || 'engagement', // Use provided sortBy or default to engagement
         userProfile: null // No personalization for trending
-      }),
+      }, env),
       25000, // 25 seconds timeout (before axios 30s timeout)
       () => [] // No mock data: return empty so frontend can show maintenance message
     );
@@ -647,7 +647,7 @@ async function handlePersonalizedNews(request, env) {
         timeFilter,
         sortBy: 'relevance', // Sort by relevance for personalized
         userProfile: userProfile
-      }),
+      }, env),
       25000, // 25 seconds timeout
       () => [] // No mock data: return empty so frontend can show maintenance message
     );
@@ -836,7 +836,7 @@ async function handleNews(request, env) {
       timeFilter,
       sortBy,
       userProfile: user_profile
-    });
+    }, env);
     
     // Calculate user relevance score
     let userRelevanceScore = 0.0;
@@ -879,8 +879,8 @@ async function handleNews(request, env) {
 }
 
 // Real news fetching using RSS feeds, APIs, uAgents, and knowledge graph
-// Optimized for faster response times
-async function fetchBlockchainNews(limit, options = {}) {
+// Optimized for faster response times. env is used for API keys (e.g. NEWSAPI_KEY).
+async function fetchBlockchainNews(limit, options = {}, env = {}) {
   try {
     // Import the news aggregator
     const { NewsAggregator } = await import('./news-aggregator.js');
@@ -900,7 +900,8 @@ async function fetchBlockchainNews(limit, options = {}) {
       category: options.category || 'all',
       timeFilter: options.timeFilter || '24h',
       sortBy: options.sortBy || 'relevance',
-      userProfile: options.userProfile
+      userProfile: options.userProfile,
+      env
     });
     
     console.log('Raw news fetched:', rawNews.length, 'articles');
@@ -1953,7 +1954,7 @@ async function handleAIDailyDigest(request, env) {
   try {
     const url = new URL(request.url);
     const userId = url.searchParams.get('userId');
-    const items = await fetchBlockchainNews(40, { timeFilter: '24h', sortBy: 'relevance' });
+    const items = await fetchBlockchainNews(40, { timeFilter: '24h', sortBy: 'relevance' }, env);
     const byCategory = new Map();
     const bySource = new Map();
     const headlines = [];
@@ -2004,7 +2005,7 @@ async function handleAIAsk(request, env) {
         headers: { 'Content-Type': 'application/json', ...corsHeaders }
       });
     }
-    const items = await fetchBlockchainNews(30, { timeFilter: '7d', sortBy: 'relevance' });
+    const items = await fetchBlockchainNews(30, { timeFilter: '7d', sortBy: 'relevance' }, env);
     const replyParts = [];
     if (query.includes('insight') || query.includes('summary') || query.includes('habit') || query.includes('read')) {
       if (userId) {
@@ -2260,7 +2261,7 @@ async function handleNewsSearch(request, env) {
     const items = await fetchBlockchainNews(limit * 5, { 
       timeFilter: timeFilter || 'all', 
       sortBy: 'relevance' 
-    });
+    }, env);
     
     const qLower = q.toLowerCase();
     const filtered = items.filter(a => {
@@ -2290,7 +2291,7 @@ async function handleNewsDetail(request, env) {
   try {
     const url = new URL(request.url);
     const id = url.pathname.split('/').pop();
-    const items = await fetchBlockchainNews(120, { timeFilter: '7d', sortBy: 'relevance' });
+    const items = await fetchBlockchainNews(120, { timeFilter: '7d', sortBy: 'relevance' }, env);
     const found = items.find(a => a.id === id || (a.url && a.url === decodeURIComponent(id)));
     if (!found) {
       return new Response(JSON.stringify({ error: 'Article not found' }), {
@@ -2335,7 +2336,7 @@ async function handleLaunchesDrops(request, env) {
 
 async function handleCategories(request, env) {
   try {
-    const items = await fetchBlockchainNews(150, { timeFilter: '7d', sortBy: 'relevance' });
+    const items = await fetchBlockchainNews(150, { timeFilter: '7d', sortBy: 'relevance' }, env);
     const counts = new Map();
     items.forEach(a => {
       const cats = Array.isArray(a.categories) ? a.categories : ['general'];

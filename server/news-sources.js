@@ -537,8 +537,8 @@ export const NEWS_SOURCES = {
     {
       name: "NewsAPI",
       url: "https://newsapi.org/v2/everything",
-      apiKey: null, // Set in wrangler.toml if needed
-      enabled: false, // Enable when you have API key
+      apiKey: null, // Injected at runtime from env.NEWSAPI_KEY (wrangler secret)
+      enabled: true,
       rateLimit: 1000, // requests per day
       cost: "Free tier: 1000 requests/day",
       priority: 1

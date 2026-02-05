@@ -81,6 +81,16 @@ wrangler pages deploy ./build --project-name=blockchainvibe
 - **Compatibility dates**: `2025-12-10` in root and `server/wrangler.toml`.
 - Keep Wrangler updated: `npm install -g wrangler@latest`.
 
+### Worker secrets (optional)
+
+To enable **NewsAPI.org** as an additional news source (blockchain/crypto headlines), set the API key as a Worker secret (do not commit the key):
+
+```bash
+cd server && wrangler secret put NEWSAPI_KEY
+```
+
+Paste your key when prompted. The aggregator uses it for `/v2/everything` when present.
+
 ### Implemented
 
 1. **Security headers** (`public/_headers`): X-Frame-Options, X-Content-Type-Options, CSP, HSTS, Referrer-Policy, Permissions-Policy.

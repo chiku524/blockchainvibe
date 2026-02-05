@@ -35,12 +35,14 @@ export class NewsAggregator {
       userProfile = null
     } = options;
 
+    const env = options.env || {};
+
     try {
       // Fetch from RSS feeds (primary source)
       const rssNews = await this.fetchFromRSSFeeds(limit * 2);
       
-      // Fetch from APIs if enabled
-      const apiNews = await this.fetchFromAPIs(limit);
+      // Fetch from APIs if enabled (API keys can come from options.env)
+      const apiNews = await this.fetchFromAPIs(limit, env);
       
       // Combine and deduplicate using enhanced deduplication
       const allNews = deduplicateArticles([...rssNews, ...apiNews], 0.75);
@@ -334,9 +336,19 @@ export class NewsAggregator {
     }
   }
 
-  // Fetch from news APIs
-  async fetchFromAPIs(limit) {
-    const enabledAPIs = NEWS_SOURCES.NEWS_APIS.filter(api => api.enabled && api.apiKey);
+  // Fetch from news APIs (env provides runtime keys e.g. NEWSAPI_KEY)
+  async fetchFromAPIs(limit, env = {}) {
+    const enabledAPIs = NEWS_SOURCES.NEWS_APIS
+      .filter(api => {
+        if (!api.enabled) return false;
+        if (api.name === 'NewsAPI') return !!(api.apiKey || env.NEWSAPI_KEY);
+        return !!api.apiKey;
+      })
+      .map(api => ({
+        ...api,
+        apiKey: api.apiKey || (api.name === 'NewsAPI' ? env.NEWSAPI_KEY : null)
+      }))
+      .filter(api => api.apiKey);
     const newsPromises = enabledAPIs.map(api => this.fetchFromAPI(api, limit));
     
     try {
@@ -358,10 +370,10 @@ export class NewsAggregator {
       const params = new URLSearchParams();
       
       if (api.name === 'NewsAPI') {
-        params.append('q', 'bitcoin OR ethereum OR cryptocurrency OR blockchain');
+        params.append('q', 'bitcoin OR ethereum OR cryptocurrency OR blockchain OR defi OR NFT OR web3 OR crypto OR token');
         params.append('sortBy', 'publishedAt');
         params.append('language', 'en');
-        params.append('pageSize', limit);
+        params.append('pageSize', Math.min(Math.max(limit, 10), 100));
         params.append('apiKey', api.apiKey);
       } else if (api.name === 'GNews') {
         params.append('q', 'bitcoin OR ethereum OR cryptocurrency');
@@ -427,6 +439,7 @@ export class NewsAggregator {
       title: article.title || article.headline,
       url: article.url || article.link,
       source: article.source?.name || api.name,
+      source_id: article.source?.id || null,
       published_at: article.publishedAt || article.created_at || new Date().toISOString(),
       summary: article.description || article.summary,
       content: article.content || article.description,
@@ -434,8 +447,9 @@ export class NewsAggregator {
       categories: this.categorizeContent(article.title + ' ' + (article.description || '')),
       tags: this.extractTags(article.title + ' ' + (article.description || '')),
       image_url: article.urlToImage || article.image,
-      author: article.author || api.name,
+      author: article.author || null,
       relevance_score: 0.5,
+      _source_api: api.name,
       engagement_metrics: {
         likes: Math.floor(Math.random() * 100),
         views: Math.floor(Math.random() * 1000),

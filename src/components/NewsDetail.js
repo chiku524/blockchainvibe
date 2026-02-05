@@ -299,6 +299,22 @@ const ExternalLinkButton = styled.a`
   }
 `;
 
+const AttributionBlock = styled.div`
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background: ${props => props.theme.colors.background};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-size: ${props => props.theme.fontSize.sm};
+  color: ${props => props.theme.colors.textSecondary};
+  line-height: 1.6;
+`;
+const AttributionTitle = styled.div`
+  font-weight: ${props => props.theme.fontWeight.semibold};
+  color: ${props => props.theme.colors.text};
+  margin-bottom: 0.5rem;
+`;
+
 const NewsDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -401,17 +417,30 @@ const NewsDetail = () => {
 
         <ArticleContent>
           <ArticleExcerpt>
-            {news.content || news.excerpt || 'No description available.'}
+            {news.summary || news.excerpt || news.content || 'No description available.'}
           </ArticleExcerpt>
 
           <ArticleBody>
-            {news.full_content || news.content || (
-              <p>
-                This is a preview of the article. To read the full content, 
-                please visit the original source using the link below.
-              </p>
-            )}
+            {news.full_content
+              ? news.full_content
+              : (news.content && news.content.length > (news.summary || news.excerpt || '').length)
+                ? news.content
+                : (
+                  <p>
+                    This is a preview. Read the full article at the source below.
+                  </p>
+                )}
           </ArticleBody>
+
+          <AttributionBlock>
+            <AttributionTitle>Attribution</AttributionTitle>
+            This story is from <SourceName as="span">{news.source}</SourceName>
+            {news.author ? <> · Written by {news.author}</> : null}.
+            {' '}
+            <a href={news.url} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+              Read the full article at {news.source}
+            </a>
+          </AttributionBlock>
 
           {news.tags && news.tags.length > 0 && (
             <TagsContainer>
@@ -454,7 +483,7 @@ const NewsDetail = () => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Read Full Article
+            Read full article at {news.source}
             <ExternalLink size={16} />
           </ExternalLinkButton>
         </ActionsContainer>
