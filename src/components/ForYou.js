@@ -322,12 +322,6 @@ const PreferenceText = styled.div`
   color: ${props => props.theme.colors.text};
 `;
 
-const PreferenceValue = styled.div`
-  font-size: ${props => props.theme.fontSize.xs};
-  color: ${props => props.theme.colors.textSecondary};
-  font-weight: ${props => props.theme.fontWeight.medium};
-`;
-
 const EmptyState = styled.div`
   text-align: center;
   padding: 4rem 2rem;
