@@ -522,12 +522,13 @@ const Register = () => {
         <AuthForm onSubmit={handleSubmit}>
           <FormRow>
             <FormGroup>
-              <FormLabel>First Name</FormLabel>
+              <FormLabel htmlFor="register-firstName">First Name</FormLabel>
               <InputContainer>
                 <InputIcon>
                   <User size={18} />
                 </InputIcon>
                 <FormInput
+                  id="register-firstName"
                   type="text"
                   name="firstName"
                   value={formData.firstName}
@@ -545,12 +546,13 @@ const Register = () => {
             </FormGroup>
             
             <FormGroup>
-              <FormLabel>Last Name</FormLabel>
+              <FormLabel htmlFor="register-lastName">Last Name</FormLabel>
               <InputContainer>
                 <InputIcon>
                   <User size={18} />
                 </InputIcon>
                 <FormInput
+                  id="register-lastName"
                   type="text"
                   name="lastName"
                   value={formData.lastName}
@@ -569,12 +571,13 @@ const Register = () => {
           </FormRow>
           
           <FormGroup>
-            <FormLabel>Email Address</FormLabel>
+            <FormLabel htmlFor="register-email">Email Address</FormLabel>
             <InputContainer>
               <InputIcon>
                 <Mail size={18} />
               </InputIcon>
               <FormInput
+                id="register-email"
                 type="email"
                 name="email"
                 value={formData.email}
@@ -592,12 +595,13 @@ const Register = () => {
           </FormGroup>
           
           <FormGroup>
-            <FormLabel>Company (Optional)</FormLabel>
+            <FormLabel htmlFor="register-company">Company (Optional)</FormLabel>
             <InputContainer>
               <InputIcon>
                 <Building size={18} />
               </InputIcon>
               <FormInput
+                id="register-company"
                 type="text"
                 name="company"
                 value={formData.company}
@@ -608,12 +612,13 @@ const Register = () => {
           </FormGroup>
           
           <FormGroup>
-            <FormLabel>Password</FormLabel>
+            <FormLabel htmlFor="register-password">Password</FormLabel>
             <InputContainer>
               <InputIcon>
                 <Lock size={18} />
               </InputIcon>
               <FormInput
+                id="register-password"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
@@ -647,12 +652,13 @@ const Register = () => {
           </FormGroup>
           
           <FormGroup>
-            <FormLabel>Confirm Password</FormLabel>
+            <FormLabel htmlFor="register-confirmPassword">Confirm Password</FormLabel>
             <InputContainer>
               <InputIcon>
                 <Lock size={18} />
               </InputIcon>
               <FormInput
+                id="register-confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}

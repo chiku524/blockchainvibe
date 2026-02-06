@@ -365,6 +365,8 @@ const AIInsights = () => {
           </CardTitle>
           <AskForm onSubmit={handleAsk}>
             <AskInput
+              id="ai-ask-query"
+              name="aiQuery"
               type="text"
               placeholder="e.g. What's trending in DeFi? or Give me my reading summary"
               value={query}

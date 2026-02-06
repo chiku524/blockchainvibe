@@ -458,16 +458,16 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
 
       <FilterBar>
         <SelectGroup>
-          <SelectLabel>Timeframe</SelectLabel>
-          <Select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} aria-label="Timeframe">
+          <SelectLabel htmlFor="newsfeed-timeframe">Timeframe</SelectLabel>
+          <Select id="newsfeed-timeframe" name="timeframe" value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} aria-label="Timeframe">
             {timeFilters.map(f => (
               <option key={f.value} value={f.value}>{f.label}</option>
             ))}
           </Select>
         </SelectGroup>
         <SelectGroup>
-          <SelectLabel>Category</SelectLabel>
-          <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label="Category">
+          <SelectLabel htmlFor="newsfeed-category">Category</SelectLabel>
+          <Select id="newsfeed-category" name="category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label="Category">
             {categoryFilters.map(f => (
               <option key={f.value} value={f.value}>{f.label}</option>
             ))}

@@ -293,7 +293,7 @@ const HelpCenter = () => {
             to get the most out of BlockchainVibe.
           </HeroSubtitle>
           <SearchBar>
-            <SearchInput type="text" placeholder="Search for help..." />
+            <SearchInput id="helpcenter-search" name="helpSearch" type="text" placeholder="Search for help..." />
             <SearchIcon size={20} />
           </SearchBar>
         </Hero>

@@ -525,24 +525,24 @@ const Trending = () => {
       <FilterControls style={{ marginBottom: '2rem' }}>
         <SelectRow>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <SelectLabel>Timeframe</SelectLabel>
-            <Select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} aria-label="Timeframe">
+            <SelectLabel htmlFor="trending-timeframe">Timeframe</SelectLabel>
+            <Select id="trending-timeframe" name="timeframe" value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} aria-label="Timeframe">
               {timeFilters.map(f => (
                 <option key={f.value} value={f.value}>{f.label}</option>
               ))}
             </Select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <SelectLabel>Category</SelectLabel>
-            <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label="Category">
+            <SelectLabel htmlFor="trending-category">Category</SelectLabel>
+            <Select id="trending-category" name="category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label="Category">
               {categoryFilters.map(f => (
                 <option key={f.value} value={f.value}>{f.label}</option>
               ))}
             </Select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <SelectLabel>Sort</SelectLabel>
-            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort">
+            <SelectLabel htmlFor="trending-sort">Sort</SelectLabel>
+            <Select id="trending-sort" name="sortBy" value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort">
               {sortOptions.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}

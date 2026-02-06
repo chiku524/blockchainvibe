@@ -363,6 +363,8 @@ const LikedArticles = () => {
             <Search size={18} />
           </SearchIcon>
           <SearchInput
+            id="liked-search"
+            name="likedSearch"
             type="text"
             placeholder="Search liked articles..."
             value={searchQuery}

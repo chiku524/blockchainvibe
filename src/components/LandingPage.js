@@ -952,13 +952,13 @@ const LandingPage = ({ theme, onThemeChange }) => {
             
             <ContactForm>
               <FormGroup>
-                <FormInput type="text" placeholder="Your Name" />
+                <FormInput id="landing-name" name="name" type="text" placeholder="Your Name" />
               </FormGroup>
               <FormGroup>
-                <FormInput type="email" placeholder="Your Email" />
+                <FormInput id="landing-email" name="email" type="email" placeholder="Your Email" />
               </FormGroup>
               <FormGroup>
-                <FormTextarea placeholder="Your Message" rows="5" />
+                <FormTextarea id="landing-message" name="message" placeholder="Your Message" rows="5" />
               </FormGroup>
               <FormButton>Send Message</FormButton>
             </ContactForm>

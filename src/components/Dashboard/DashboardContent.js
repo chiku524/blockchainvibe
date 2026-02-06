@@ -497,6 +497,8 @@ const DashboardContent = () => {
             <SearchIcon size={20} />
             <form onSubmit={handleSearch}>
               <SearchInput
+                id="dashboard-search"
+                name="searchQuery"
                 type="text"
                 placeholder="Search news..."
                 value={searchQuery}
