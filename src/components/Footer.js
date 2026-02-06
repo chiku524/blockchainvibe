@@ -151,8 +151,19 @@ const Footer = () => {
             <LogoImage src="/logo.svg" alt="BlockchainVibe Logo" />
             <BrandTitle>BlockchainVibe</BrandTitle>
           </BrandLogo>
-          <BrandText>AI-powered blockchain news, personalized with uAgents and a knowledge graph.</BrandText>
+          <BrandText>Your hub for crypto news, airdrops, and launches — powered by AI.</BrandText>
+          <BrandText style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Tip: Press ⌘K (Mac) or Ctrl+K (Win) to search from anywhere.</BrandText>
         </Brand>
+        <Column>
+          <ColumnTitle>Discover</ColumnTitle>
+          <LinkList>
+            <FooterRouterLink to="/airdrops">Latest airdrops</FooterRouterLink>
+            <FooterRouterLink to="/new-token-launches">New token launches</FooterRouterLink>
+            <FooterRouterLink to="/launches">Launches & Drops hub</FooterRouterLink>
+            <FooterRouterLink to="/calendar">Crypto calendar</FooterRouterLink>
+            <FooterRouterLink to="/alerts">Alerts</FooterRouterLink>
+          </LinkList>
+        </Column>
         <Column>
           <ColumnTitle>Resources</ColumnTitle>
           <LinkList>

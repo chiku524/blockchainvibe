@@ -5,7 +5,9 @@ import {
   RefreshCw, 
   Search,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Newspaper,
+  Gift
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
@@ -20,7 +22,6 @@ import LaunchesCalendar from '../Launches/LaunchesCalendar';
 import { newsAPI, launchesAPI } from '../../services/api';
 import { handleApiError } from '../../utils/errorHandler';
 import { useAIInsights } from '../../hooks/useAI';
-import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
@@ -83,6 +84,99 @@ const HeaderActions = styled.div`
 
   @media (max-width: ${props => props.theme.breakpoints.md}) {
     width: 100%;
+  }
+`;
+
+const HubQuickLinks = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+`;
+
+const HubQuickLinkCard = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  color: ${props => props.theme.colors.text};
+  text-align: left;
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.fast};
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+    box-shadow: ${props => props.theme.shadows.md};
+  }
+`;
+
+const HubQuickLinkIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: ${props => props.theme.borderRadius.md};
+  background: ${props => props.theme.colors.primary}18;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${props => props.theme.colors.primary};
+`;
+
+const HubQuickLinkLabel = styled.span`
+  font-size: ${props => props.theme.fontSize.base};
+  font-weight: ${props => props.theme.fontWeight.semibold};
+`;
+const HubQuickLinkDesc = styled.span`
+  display: block;
+  font-size: ${props => props.theme.fontSize.xs};
+  color: ${props => props.theme.colors.textSecondary};
+  margin-top: 0.15rem;
+`;
+
+const TrendingStrip = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+const TrendingStripLabel = styled.span`
+  font-size: ${props => props.theme.fontSize.xs};
+  font-weight: ${props => props.theme.fontWeight.semibold};
+  color: ${props => props.theme.colors.textSecondary};
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 0.5rem;
+`;
+
+const TrendingStripScroll = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.25rem 0;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+`;
+
+const TrendingChip = styled.button`
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  border: 1px solid ${props => props.theme.colors.border};
+  background: ${props => props.theme.colors.surface};
+  color: ${props => props.theme.colors.text};
+  font-size: ${props => props.theme.fontSize.sm};
+  font-weight: ${props => props.theme.fontWeight.medium};
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.fast};
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+    color: ${props => props.theme.colors.primary};
+    background: ${props => props.theme.colors.primary}10;
   }
 `;
 
@@ -293,6 +387,29 @@ const SidebarTitle = styled.h3`
   margin: 0 0 1rem 0;
 `;
 
+const SidebarCardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+`;
+
+const ReminderItem = styled.a`
+  display: block;
+  padding: 0.5rem 0;
+  font-size: ${props => props.theme.fontSize.sm};
+  color: ${props => props.theme.colors.text};
+  text-decoration: none;
+  border-bottom: 1px solid ${props => props.theme.colors.border};
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    color: ${props => props.theme.colors.primary};
+  }
+`;
+
 const TrendingList = styled.div`
   display: flex;
   flex-direction: column;
@@ -334,15 +451,38 @@ const TrendingText = styled.div`
   color: ${props => props.theme.colors.text};
 `;
 
+const MY_TOPICS_KEY = 'blockchainvibe_my_topics';
+const AIRDROP_REMINDERS_KEY = 'blockchainvibe_airdrop_reminders';
+
+const loadJson = (key, def = []) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : def;
+  } catch {
+    return def;
+  }
+};
+
 const DashboardContent = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [user, setUser] = useState(null);
   const [analytics, setAnalytics] = useState({ articlesRead: 0, timeSpentMinutes: 0 });
+  const [myTopics, setMyTopics] = useState(() => loadJson(MY_TOPICS_KEY, []));
+  const [airdropReminders, setAirdropReminders] = useState(() => loadJson(AIRDROP_REMINDERS_KEY, []));
   const { data: insightsData } = useAIInsights();
   const aiInsights = insightsData?.insights || [];
-  useDocumentTitle('Dashboard');
+
+  useEffect(() => {
+    const refresh = () => {
+      setMyTopics(loadJson(MY_TOPICS_KEY, []));
+      setAirdropReminders(loadJson(AIRDROP_REMINDERS_KEY, []));
+    };
+    refresh();
+    window.addEventListener('focus', refresh);
+    return () => window.removeEventListener('focus', refresh);
+  }, []);
 
   // Check if profile completion is needed
   useEffect(() => {
@@ -490,7 +630,7 @@ const DashboardContent = () => {
       <Header>
         <div>
           <Title>Welcome back, {user?.name || 'User'}!</Title>
-          <Subtitle>Here's your personalized blockchain news feed</Subtitle>
+          <Subtitle>Your hub for crypto news, airdrops, and launches — powered by AI</Subtitle>
         </div>
         <HeaderActions>
           <SearchContainer>
@@ -512,6 +652,52 @@ const DashboardContent = () => {
           </RefreshButton>
         </HeaderActions>
       </Header>
+
+      <HubQuickLinks>
+        <HubQuickLinkCard type="button" onClick={() => navigate('/news')}>
+          <HubQuickLinkIcon><Newspaper size={22} /></HubQuickLinkIcon>
+          <div>
+            <HubQuickLinkLabel>News Hub</HubQuickLinkLabel>
+            <HubQuickLinkDesc>Trending, For You, All News</HubQuickLinkDesc>
+          </div>
+          <ChevronRight size={18} style={{ marginLeft: 'auto', color: 'var(--text-secondary)' }} />
+        </HubQuickLinkCard>
+        <HubQuickLinkCard type="button" onClick={() => navigate('/launches')}>
+          <HubQuickLinkIcon><Gift size={22} /></HubQuickLinkIcon>
+          <div>
+            <HubQuickLinkLabel>Airdrops & Launches</HubQuickLinkLabel>
+            <HubQuickLinkDesc>Airdrops, new tokens, NFT drops</HubQuickLinkDesc>
+          </div>
+          <ChevronRight size={18} style={{ marginLeft: 'auto', color: 'var(--text-secondary)' }} />
+        </HubQuickLinkCard>
+      </HubQuickLinks>
+
+      <TrendingStrip>
+        <TrendingStripLabel>Trending now</TrendingStripLabel>
+        <TrendingStripScroll>
+          {[
+            ...new Set([
+              'Bitcoin',
+              'Ethereum',
+              'Solana',
+              'DeFi',
+              'NFT',
+              'Airdrops',
+              ...(trendingTopicLabels || [])
+            ])
+          ]
+            .slice(0, 12)
+            .map((term) => (
+              <TrendingChip
+                key={term}
+                type="button"
+                onClick={() => navigate(`/search?q=${encodeURIComponent(term)}`)}
+              >
+                {term}
+              </TrendingChip>
+            ))}
+        </TrendingStripScroll>
+      </TrendingStrip>
 
       <StatsGrid>
         <StatCard>
@@ -608,6 +794,61 @@ const DashboardContent = () => {
 
         <Sidebar>
           <SidebarCard>
+            <SidebarCardHeader>
+              <SidebarTitle style={{ margin: 0 }}>My topics</SidebarTitle>
+              <ViewAllButton onClick={() => navigate('/settings#my-topics')} style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>
+                Manage
+              </ViewAllButton>
+            </SidebarCardHeader>
+            {myTopics.length > 0 ? (
+              <TrendingList>
+                {myTopics.slice(0, 3).map((t) => (
+                  <TrendingItem
+                    key={t.id || t.label}
+                    onClick={() => t.type === 'category' ? navigate(`/news?category=${encodeURIComponent(t.value)}`) : navigate(`/search?q=${encodeURIComponent(t.value)}`)}
+                  >
+                    <TrendingText>{t.label}</TrendingText>
+                  </TrendingItem>
+                ))}
+              </TrendingList>
+            ) : (
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>
+                <button type="button" onClick={() => navigate('/settings#my-topics')} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                  Add topics
+                </button>
+                {' '}to get one-click links here.
+              </p>
+            )}
+          </SidebarCard>
+
+          <SidebarCard>
+            <SidebarCardHeader>
+              <SidebarTitle style={{ margin: 0 }}>Airdrop reminders</SidebarTitle>
+              {airdropReminders.length > 0 && (
+                <ViewAllButton onClick={() => navigate('/launches')} style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}>
+                  View all
+                </ViewAllButton>
+              )}
+            </SidebarCardHeader>
+            {airdropReminders.length > 0 ? (
+              <TrendingList>
+                {airdropReminders.slice(0, 5).map((r, i) => (
+                  <ReminderItem key={r.id || i} href={r.link || '#'} target="_blank" rel="noopener noreferrer">
+                    {r.title || 'Airdrop'}
+                  </ReminderItem>
+                ))}
+              </TrendingList>
+            ) : (
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Use <strong>Remind me</strong> on any airdrop in{' '}
+                <button type="button" onClick={() => navigate('/launches')} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                  Launches
+                </button>.
+              </p>
+            )}
+          </SidebarCard>
+
+          <SidebarCard>
             <SidebarTitle>Trending Topics</SidebarTitle>
             <TrendingList>
               {trendingTopicLabels.length > 0 ? trendingTopicLabels.map((topic, index) => (
@@ -642,7 +883,7 @@ const DashboardContent = () => {
           <SidebarCard>
             <SidebarTitle style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Sparkles size={18} />
-              AI Insights
+              Your AI digest
             </SidebarTitle>
             {aiInsights.length > 0 ? (
               <>

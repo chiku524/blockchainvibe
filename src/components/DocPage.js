@@ -6,8 +6,8 @@ import AnimatedBackground from './AnimatedBackground';
 import Footer from './Footer';
 import MarkdownContent from './MarkdownContent';
 import TableOfContents from './TableOfContents';
-import SEO from './SEO';
-import { getMetadataForRoute } from '../utils/seoMetadata';
+import PageMeta from './PageMeta';
+import { getMetadataForRoute } from '../config/seo';
 import { useTheme } from '../contexts/ThemeContext';
 
 const DocPageContainer = styled.div`
@@ -159,7 +159,6 @@ const DocPage = () => {
   const { page } = useParams();
   const { theme, setTheme } = useTheme();
   
-  // Get SEO metadata for this page
   const seoData = getMetadataForRoute(`/docs/${page}`);
   
   // Determine file path based on page type
@@ -175,11 +174,11 @@ const DocPage = () => {
   
   return (
     <DocPageContainer>
-      <SEO 
+      <PageMeta
         title={seoData.title}
         description={seoData.description}
         keywords={seoData.keywords}
-        url={seoData.url}
+        canonicalPath={seoData.url}
       />
       <AnimatedBackground />
       <Navigation theme={theme} onThemeChange={setTheme} />

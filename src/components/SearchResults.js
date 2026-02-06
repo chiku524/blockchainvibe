@@ -7,7 +7,7 @@ import NewsCard from './NewsCard';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorState from './ErrorState';
 import EmptyState from './EmptyState';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import PageMeta from './PageMeta';
 import { getErrorMessage } from '../utils/errorHandler';
 
 const SearchContainer = styled.div`
@@ -143,7 +143,6 @@ const SearchResults = () => {
   const query = searchParams.get('q') || '';
   const { data: searchData, isLoading, error, refetch, isFetching } = useSearchNews(query);
   const { trackActivity } = useUser();
-  useDocumentTitle(query ? `Search: ${query}` : 'Search');
 
   const handleNewsInteraction = async (newsId, action) => {
     try {
@@ -181,6 +180,10 @@ const SearchResults = () => {
     const suggestions = ['Bitcoin', 'Ethereum', 'DeFi', 'NFTs', 'Web3', 'Blockchain', 'Crypto'];
     return (
       <SearchContainer>
+        <PageMeta
+          title={query ? `Search: ${query}` : undefined}
+          description={query ? `Search results for "${query}" in crypto and blockchain news.` : undefined}
+        />
         <SearchHeader>
           <SearchTitle>Search Results for "{query}"</SearchTitle>
           <SearchSubtitle>No articles found matching your search.</SearchSubtitle>
@@ -208,6 +211,10 @@ const SearchResults = () => {
 
   return (
     <SearchContainer>
+      <PageMeta
+        title={query ? `Search: ${query}` : undefined}
+        description={query ? `Search results for "${query}" in crypto and blockchain news.` : undefined}
+      />
       <SearchHeader>
         <SearchTitle>Search Results for "{query}"</SearchTitle>
         <SearchSubtitle>

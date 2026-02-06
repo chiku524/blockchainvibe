@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import styled from 'styled-components';
 import { motion, useInView } from 'framer-motion';
+import { useQuery } from 'react-query';
 import { 
   ArrowRight, 
   TrendingUp, 
@@ -8,13 +9,16 @@ import {
   Shield, 
   Zap, 
   Users, 
-  Star
+  Star,
+  Newspaper,
+  Gift
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from './Navigation';
 import AnimatedBackground from './AnimatedBackground';
 import Footer from './Footer';
-import SEO from './SEO';
+import PageMeta from './PageMeta';
+import { launchesAPI } from '../services/api';
 
 const LandingContainer = styled.div`
   background: ${props => props.theme.colors.background};
@@ -157,6 +161,75 @@ const SecondaryButton = styled.button`
     border-color: ${props => props.theme.colors.primary};
     color: ${props => props.theme.colors.primary};
   }
+`;
+
+const WhatsOnSection = styled.section`
+  padding: 3rem 1rem;
+  background: ${props => props.theme.colors.background};
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  border-top: 1px solid ${props => props.theme.colors.border};
+`;
+
+const WhatsOnContainer = styled.div`
+  max-width: 900px;
+  margin: 0 auto;
+`;
+
+const WhatsOnTitle = styled.h2`
+  font-size: ${props => props.theme.fontSize['2xl']};
+  font-weight: ${props => props.theme.fontWeight.bold};
+  color: ${props => props.theme.colors.text};
+  text-align: center;
+  margin-bottom: 0.5rem;
+`;
+
+const WhatsOnSubtitle = styled.p`
+  font-size: ${props => props.theme.fontSize.sm};
+  color: ${props => props.theme.colors.textSecondary};
+  text-align: center;
+  margin-bottom: 1.5rem;
+`;
+
+const WhatsOnList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+`;
+
+const WhatsOnLink = styled.a`
+  display: block;
+  padding: 0.75rem 1rem;
+  background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  color: ${props => props.theme.colors.text};
+  text-decoration: none;
+  font-weight: ${props => props.theme.fontWeight.medium};
+  transition: border-color 0.2s;
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+  }
+`;
+
+const WhatsOnCta = styled.button`
+  display: block;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  background: ${props => props.theme.colors.primary};
+  color: ${props => props.theme.colors.textInverse};
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.lg};
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  margin-right: auto;
+  &:hover { opacity: 0.9; }
 `;
 
 const FeaturesSection = styled.section`
@@ -694,6 +767,12 @@ const FormButton = styled.button`
 
 const LandingPage = ({ theme, onThemeChange }) => {
   const navigate = useNavigate();
+  const { data: launchesData } = useQuery(
+    ['launches', 'landing'],
+    () => launchesAPI.getDrops(),
+    { staleTime: 10 * 60 * 1000 }
+  );
+  const landingAirdrops = launchesData?.airdrops ?? [];
 
   const Reveal = ({ children, delay = 0 }) => {
     const ref = useRef(null);
@@ -720,43 +799,43 @@ const LandingPage = ({ theme, onThemeChange }) => {
 
   const features = [
     {
+      icon: <Newspaper size={32} />,
+      title: "News Hub",
+      description: "All forms of crypto and blockchain news in one feed — trending, personalized, and from trusted sources."
+    },
+    {
+      icon: <Gift size={32} />,
+      title: "Airdrops & Launches",
+      description: "Discover airdrops, new token launches, and NFT drops. Explain any airdrop with AI in one click."
+    },
+    {
       icon: <Brain size={32} />,
-      title: "AI-Powered Intelligence",
-      description: "Leverages Fetch.ai uAgents and SingularityNET MeTTa for intelligent news analysis and personalization."
+      title: "AI-Enhanced Experience",
+      description: "Summaries, personalization, and insights powered by AI so you stay informed without the noise."
     },
     {
       icon: <TrendingUp size={32} />,
-      title: "Real-time Trending",
-      description: "Get the latest blockchain news as it happens with our advanced trending algorithms."
+      title: "Real-Time Trending",
+      description: "See what’s moving the market with trending news and token launches as they happen."
     },
     {
       icon: <Shield size={32} />,
-      title: "Personalized Feed",
-      description: "News tailored to your interests and reading patterns using advanced ML algorithms."
-    },
-    {
-      icon: <Zap size={32} />,
-      title: "Lightning Fast",
-      description: "Optimized for speed with intelligent caching and real-time updates."
-    },
-    {
-      icon: <Users size={32} />,
-      title: "Community Driven",
-      description: "Connect with other blockchain enthusiasts and share insights."
+      title: "Personalized For You",
+      description: "Your feed adapts to what you read and like — news and launches that match your interests."
     },
     {
       icon: <Star size={32} />,
-      title: "Premium Sources",
-      description: "Curated from top blockchain news sources and verified information."
+      title: "One Hub for Everything",
+      description: "News, airdrops, launches, and AI insights in one place. No more jumping between sites."
     }
   ];
 
   return (
     <LandingContainer>
-      <SEO 
-        title="BlockchainVibe - AI-Powered Blockchain News Aggregator"
-        description="AI-powered blockchain news platform with intelligent personalization using Fetch.ai uAgents and SingularityNET MeTTa Knowledge Graph. Stay ahead with real-time blockchain news tailored to your interests."
-        url="/"
+      <PageMeta
+        title="The Go-To Hub for Crypto & Blockchain"
+        description="Your one-stop hub for all crypto and blockchain: aggregated news from every angle, airdrops and token launches, and AI-powered insights. News, drops, and launches in one place."
+        canonicalPath="/"
       />
       <AnimatedBackground />
       <Navigation theme={theme} onThemeChange={onThemeChange} />
@@ -767,7 +846,7 @@ const LandingPage = ({ theme, onThemeChange }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            AI-Powered Blockchain News
+            The Go-To Hub for Crypto & Blockchain
           </HeroTitle>
           
           <HeroSubtitle
@@ -775,8 +854,8 @@ const LandingPage = ({ theme, onThemeChange }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            Stay ahead of the curve with intelligent news aggregation, 
-            personalized recommendations, and real-time insights from the blockchain world.
+            All forms of news, airdrops & launches, and AI-enhanced discovery — 
+            one platform for everything that moves the chain.
           </HeroSubtitle>
           
           <CTAButtons
@@ -796,15 +875,34 @@ const LandingPage = ({ theme, onThemeChange }) => {
         </HeroContent>
       </HeroSection>
 
+      <WhatsOnSection>
+        <WhatsOnContainer>
+          <WhatsOnTitle>What’s on right now</WhatsOnTitle>
+          <WhatsOnSubtitle>Airdrops and launches — see more in the hub</WhatsOnSubtitle>
+          <WhatsOnList>
+            {landingAirdrops.slice(0, 3).map((a, i) => (
+              <WhatsOnLink key={a.id || i} href={a.link || '#'} target="_blank" rel="noopener noreferrer">
+                {a.title} {a.source ? ` · ${a.source}` : ''}
+              </WhatsOnLink>
+            ))}
+          </WhatsOnList>
+          <WhatsOnCta type="button" onClick={() => navigate('/launches')}>
+            <Gift size={18} />
+            See all airdrops & launches
+            <ArrowRight size={18} />
+          </WhatsOnCta>
+        </WhatsOnContainer>
+      </WhatsOnSection>
+
       <FeaturesSection id="features">
         <FeaturesContainer>
           <Reveal>
             <SectionTitle>
-              Why Choose BlockchainVibe?
+              Why BlockchainVibe?
             </SectionTitle>
           </Reveal>
           <SectionSubtitle>
-            Experience the future of blockchain news consumption with our cutting-edge AI technology
+            News from every source, airdrops and launches in one place, and AI that makes it all easier to follow
           </SectionSubtitle>
           
           <FeaturesGrid>
@@ -894,9 +992,9 @@ const LandingPage = ({ theme, onThemeChange }) => {
                 cutting-edge AI technology and intelligent automation.
               </SectionSubtitle>
               <AboutDescription>
-                Founded by blockchain enthusiasts and AI researchers, BlockchainVibe combines 
-                the power of Fetch.ai's uAgents framework with SingularityNET's MeTTa knowledge 
-                graph to deliver personalized, relevant, and timely blockchain news.
+                BlockchainVibe is built to be the go-to hub for crypto and blockchain users: 
+                all forms of news in one place, airdrops and launches everyone is looking for, 
+                and AI that enhances how you discover and understand it all.
               </AboutDescription>
             </AboutText>
             <AboutStats>
@@ -968,10 +1066,9 @@ const LandingPage = ({ theme, onThemeChange }) => {
 
       <CTASection>
         <CTAContainer>
-          <CTATitle>Ready to Transform Your News Experience?</CTATitle>
+          <CTATitle>Ready to Make This Your Crypto Hub?</CTATitle>
           <CTADescription>
-            Get started with BlockchainVibe today and experience intelligent, 
-            personalized blockchain news powered by AI.
+            Join the hub: one place for crypto news, airdrops, launches, and AI-powered insights.
           </CTADescription>
           <CTAButtons>
             <PrimaryButton onClick={handleGetStarted}>

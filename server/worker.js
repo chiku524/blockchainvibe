@@ -16,6 +16,33 @@ function handleCORS(request) {
   return null;
 }
 
+// Optional OpenAI helper for AI features (set OPENAI_API_KEY secret for LLM-backed responses)
+async function callOpenAI(env, messages, maxTokens = 500) {
+  const key = env.OPENAI_API_KEY;
+  if (!key) return null;
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages,
+        max_tokens: maxTokens,
+        temperature: 0.5,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content?.trim();
+    return content || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 // Database helper
 class DatabaseService {
   constructor(db) {
@@ -543,13 +570,12 @@ async function withTimeout(promise, timeoutMs, fallback) {
 // Trending News API
 async function handleTrendingNews(request, env) {
   try {
-    const { 
-      limit = 20, 
-      timeFilter = null, // Default to null to allow 'all time'
-      categoryFilter = 'all',
-      sortBy = 'engagement'
-    } = await request.json();
-    
+    const body = await request.json().catch(() => ({}));
+    const limit = body.limit ?? 20;
+    const timeFilter = body.timeFilter ?? body.timeframe ?? null;
+    const categoryFilter = body.categoryFilter ?? body.category ?? 'all';
+    const sortBy = body.sortBy ?? body.sort ?? 'engagement';
+
     // Fetch trending news with engagement sorting, with timeout
     const newsItems = await withTimeout(
       fetchBlockchainNews(limit, {
@@ -562,17 +588,17 @@ async function handleTrendingNews(request, env) {
       () => [] // No mock data: return empty so frontend can show maintenance message
     );
     
-    const body = {
+    const responseBody = {
       articles: newsItems,
       total_count: newsItems.length,
       last_updated: new Date().toISOString(),
       type: 'trending'
     };
     if (newsItems.length === 0) {
-      body.serviceUnavailable = true;
-      body.message = 'News service is temporarily unavailable. Please try again in a few minutes.';
+      responseBody.serviceUnavailable = true;
+      responseBody.message = 'News service is temporarily unavailable. Please try again in a few minutes.';
     }
-    return new Response(JSON.stringify(body), {
+    return new Response(JSON.stringify(responseBody), {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -603,12 +629,12 @@ async function handleTrendingNews(request, env) {
 // Personalized News API
 async function handlePersonalizedNews(request, env) {
   try {
-    const { 
-      limit = 20, 
-      timeFilter = 'today',
-      user_profile,
-      userId
-    } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const limit = body.limit ?? 20;
+    const timeFilter = body.timeFilter ?? body.timeframe ?? 'today';
+    const user_profile = body.user_profile;
+    const userId = body.userId;
+    const category = body.category ?? 'all';
     
     // Import user profiling service
     const { userProfilingService } = await import('./services/user-profiling.js');
@@ -643,7 +669,7 @@ async function handlePersonalizedNews(request, env) {
     // Fetch personalized news with timeout
     const newsItems = await withTimeout(
       fetchBlockchainNews(limit, {
-        category: 'all',
+        category,
         timeFilter,
         sortBy: 'relevance', // Sort by relevance for personalized
         userProfile: userProfile
@@ -1598,6 +1624,12 @@ export default {
       if (path === '/api/ai/ask' && method === 'POST') {
         return await handleAIAsk(request, env);
       }
+      if (path === '/api/ai/explain-airdrop' && method === 'POST') {
+        return await handleExplainAirdrop(request, env);
+      }
+      if (path === '/api/ai/summarize-article' && method === 'POST') {
+        return await handleSummarizeArticle(request, env);
+      }
 
       if (path === '/api/news/trending' && method === 'POST') {
         return await handleTrendingNews(request, env);
@@ -2043,6 +2075,118 @@ async function handleAIAsk(request, env) {
     });
   } catch (error) {
     return new Response(JSON.stringify({ success: false, message: 'Failed to process question', error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+}
+
+// AI Explain Airdrop: structured summary for airdrop/launch (title, steps, risks). Uses OpenAI if OPENAI_API_KEY is set.
+async function handleExplainAirdrop(request, env) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const title = (body.title || '').trim();
+    const source = (body.source || body.provider || '').trim();
+    const date = body.date || null;
+    const link = body.link || body.url || '';
+
+    if (!title) {
+      return new Response(JSON.stringify({ success: false, message: 'title is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
+    let summary, steps, risks;
+
+    const llmContent = await callOpenAI(env, [
+      { role: 'system', content: 'You are a crypto safety assistant. Reply only with valid JSON: { "summary": "one short paragraph", "steps": ["step1","step2",...], "risks": ["risk1","risk2",...] }. No markdown, no code block.' },
+      { role: 'user', content: `Airdrop: "${title}". Source: ${source || 'Unknown'}. Provide: 1) a brief summary, 2) 4-5 practical steps to qualify/claim, 3) 3 risks to consider. JSON only.` }
+    ], 600);
+
+    if (llmContent) {
+      try {
+        const raw = llmContent.replace(/^```\w*\n?|\n?```$/g, '').trim();
+        const parsed = JSON.parse(raw);
+        if (parsed.summary && Array.isArray(parsed.steps) && Array.isArray(parsed.risks)) {
+          summary = parsed.summary;
+          steps = parsed.steps;
+          risks = parsed.risks;
+        }
+      } catch (_) {}
+    }
+
+    if (!summary) {
+      summary = `"${title}" is an airdrop or token distribution campaign${source ? ` reported by ${source}` : ''}. Always verify the official project channels and contract addresses before connecting wallets or signing transactions.`;
+      steps = [
+        'Check the official project website and social links (often in the airdrop listing).',
+        'Ensure you meet eligibility criteria (e.g. past activity, holding, tasks).',
+        'Connect only the wallet you intend to use; avoid using a main wallet with large holdings.',
+        'Complete required steps (e.g. follow, retweet, join Discord/Telegram) if any.',
+        'Claim only through the official claim page; never send funds to claim.'
+      ];
+      risks = [
+        'Phishing: Scammers create fake airdrop sites. Always use links from the project’s official channels.',
+        'Wallet connection: Revoke unnecessary token approvals and disconnect wallets after claiming.',
+        'No guaranteed value: Airdropped tokens may have little or no liquidity at launch.'
+      ];
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      title,
+      summary,
+      steps,
+      risks,
+      source: source || null,
+      date: date || null,
+      link: link || null
+    }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ success: false, message: 'Failed to explain airdrop', error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+}
+
+// AI Summarize Article: 2–3 sentence TL;DR. Uses OpenAI if OPENAI_API_KEY is set.
+async function handleSummarizeArticle(request, env) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const title = (body.title || '').trim();
+    let summary = (body.summary || '').trim();
+    let content = (body.content || body.full_content || '').trim();
+    const text = [title, summary, content].filter(Boolean).join('\n\n').slice(0, 6000);
+
+    if (!text) {
+      return new Response(JSON.stringify({ success: false, message: 'title, summary, or content is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
+    const llmContent = await callOpenAI(env, [
+      { role: 'system', content: 'Summarize the given crypto/blockchain article in 2-3 short sentences (TL;DR). Be factual and concise. Reply with the summary only, no prefix.' },
+      { role: 'user', content: text }
+    ], 150);
+
+    let result = llmContent;
+    if (!result) {
+      const first = (summary || content).split(/\s+/).slice(0, 40).join(' ');
+      result = first ? (first.length < (summary || content).length ? first + '…' : first) : 'No summary available.';
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      summary: result
+    }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ success: false, message: 'Failed to summarize', error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders }
     });

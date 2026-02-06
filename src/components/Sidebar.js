@@ -10,7 +10,11 @@ import {
   Settings,
   LogOut,
   Sparkles,
-  Gift
+  Gift,
+  LayoutDashboard,
+  Zap,
+  Bell,
+  Calendar
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebar } from '../contexts/SidebarContext';
@@ -178,15 +182,19 @@ const Sidebar = () => {
       
       <SidebarContent collapsed={collapsed}>
         <MenuSection>
-          <SectionTitle collapsed={collapsed}>Main</SectionTitle>
+          <SectionTitle collapsed={collapsed}>Hub</SectionTitle>
           <MenuItem
             className={isActive('/dashboard') ? 'active' : ''}
             onClick={() => navigate('/dashboard')}
             title="Dashboard"
           >
-            <IconBox><TrendingUp size={18} /></IconBox>
+            <IconBox><LayoutDashboard size={18} /></IconBox>
             <MenuLabel collapsed={collapsed}>Dashboard</MenuLabel>
           </MenuItem>
+        </MenuSection>
+
+        <MenuSection>
+          <SectionTitle collapsed={collapsed}>News Hub</SectionTitle>
           <MenuItem
             className={isActive('/trending') ? 'active' : ''}
             onClick={() => navigate('/trending')}
@@ -206,18 +214,42 @@ const Sidebar = () => {
           <MenuItem
             className={isActive('/news') ? 'active' : ''}
             onClick={() => navigate('/news')}
-            title="News Feed"
+            title="All News"
           >
             <IconBox><Newspaper size={18} /></IconBox>
-            <MenuLabel collapsed={collapsed}>News Feed</MenuLabel>
+            <MenuLabel collapsed={collapsed}>All News</MenuLabel>
           </MenuItem>
+        </MenuSection>
+
+        <MenuSection>
+          <SectionTitle collapsed={collapsed}>Airdrops & Launches</SectionTitle>
           <MenuItem
             className={isActive('/launches') ? 'active' : ''}
             onClick={() => navigate('/launches')}
-            title="Launches & Drops"
+            title="Airdrops & Launches"
           >
             <IconBox><Gift size={18} /></IconBox>
-            <MenuLabel collapsed={collapsed}>Launches & Drops</MenuLabel>
+            <MenuLabel collapsed={collapsed}>Airdrops & Launches</MenuLabel>
+          </MenuItem>
+          <MenuItem
+            className={isActive('/calendar') ? 'active' : ''}
+            onClick={() => navigate('/calendar')}
+            title="Calendar"
+          >
+            <IconBox><Calendar size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Calendar</MenuLabel>
+          </MenuItem>
+        </MenuSection>
+
+        <MenuSection>
+          <SectionTitle collapsed={collapsed}>Saved & Alerts</SectionTitle>
+          <MenuItem
+            className={isActive('/alerts') ? 'active' : ''}
+            onClick={() => navigate('/alerts')}
+            title="Alerts"
+          >
+            <IconBox><Bell size={18} /></IconBox>
+            <MenuLabel collapsed={collapsed}>Alerts</MenuLabel>
           </MenuItem>
           <MenuItem
             className={isActive('/saved') ? 'active' : ''}
@@ -225,15 +257,15 @@ const Sidebar = () => {
             title="Saved Articles"
           >
             <IconBox><Bookmark size={18} /></IconBox>
-            <MenuLabel collapsed={collapsed}>Saved Articles</MenuLabel>
+            <MenuLabel collapsed={collapsed}>Saved</MenuLabel>
           </MenuItem>
           <MenuItem
             className={isActive('/liked') ? 'active' : ''}
             onClick={() => navigate('/liked')}
-            title="Liked Articles"
+            title="Liked"
           >
             <IconBox><Heart size={18} /></IconBox>
-            <MenuLabel collapsed={collapsed}>Liked Articles</MenuLabel>
+            <MenuLabel collapsed={collapsed}>Liked</MenuLabel>
           </MenuItem>
         </MenuSection>
 
@@ -252,7 +284,7 @@ const Sidebar = () => {
             onClick={() => navigate('/ai-insights')}
             title="AI Insights"
           >
-            <IconBox><Sparkles size={18} /></IconBox>
+            <IconBox><Zap size={18} /></IconBox>
             <MenuLabel collapsed={collapsed}>AI Insights</MenuLabel>
           </MenuItem>
         </MenuSection>

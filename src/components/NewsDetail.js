@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from 'react-query';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -9,12 +10,16 @@ import {
   Bookmark, 
   Clock,
   User,
-  Tag
+  Tag,
+  Sparkles
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { useNewsDetail } from '../hooks/useNews';
+import { aiAPI } from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
+import PageMeta from './PageMeta';
+import { SEO_DEFAULTS } from '../config/seo';
 
 const DetailContainer = styled.div`
   max-width: 800px;
@@ -157,6 +162,31 @@ const ArticleContent = styled.div`
   @media (min-width: ${props => props.theme.breakpoints.lg}) {
     padding: 2rem;
   }
+`;
+
+const AISummaryBox = styled.div`
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: ${props => props.theme.colors.primary}0c;
+  border: 1px solid ${props => props.theme.colors.primary}30;
+  border-radius: ${props => props.theme.borderRadius.lg};
+`;
+
+const AISummaryTitle = styled.div`
+  font-size: ${props => props.theme.fontSize.sm};
+  font-weight: ${props => props.theme.fontWeight.semibold};
+  color: ${props => props.theme.colors.primary};
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const AISummaryText = styled.p`
+  font-size: ${props => props.theme.fontSize.sm};
+  color: ${props => props.theme.colors.text};
+  line-height: 1.6;
+  margin: 0;
 `;
 
 const ArticleExcerpt = styled.p`
@@ -322,6 +352,17 @@ const NewsDetail = () => {
   const [isLiked, setIsLiked] = React.useState(false);
   const [isBookmarked, setIsBookmarked] = React.useState(false);
 
+  const { data: summaryData } = useQuery(
+    ['ai', 'summarize', news?.id],
+    () => aiAPI.summarizeArticle({
+      title: news?.title,
+      summary: news?.summary || news?.excerpt,
+      content: news?.content || news?.full_content
+    }),
+    { enabled: !!news?.title && (!!(news?.summary || news?.excerpt) || !!(news?.content || news?.full_content)), staleTime: 10 * 60 * 1000 }
+  );
+  const aiSummary = summaryData?.success ? summaryData.summary : null;
+
   if (isLoading) {
     return (
       <DetailContainer>
@@ -377,8 +418,26 @@ const NewsDetail = () => {
     }
   };
 
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: news.title,
+    description: news.summary || news.excerpt || '',
+    image: news.image_url || undefined,
+    datePublished: news.published_at || undefined,
+    author: news.author ? { '@type': 'Person', name: news.author } : undefined,
+    publisher: { '@type': 'Organization', name: news.source || SEO_DEFAULTS.siteName },
+  };
+
   return (
     <DetailContainer>
+      <PageMeta
+        title={news.title}
+        description={news.summary || news.excerpt || ''}
+        image={news.image_url}
+        ogType="article"
+        jsonLd={articleJsonLd}
+      />
       <BackButton onClick={() => navigate(-1)}>
         <ArrowLeft size={18} />
         Back to News
@@ -416,6 +475,15 @@ const NewsDetail = () => {
         )}
 
         <ArticleContent>
+          {aiSummary && (
+            <AISummaryBox>
+              <AISummaryTitle>
+                <Sparkles size={16} />
+                AI Summary
+              </AISummaryTitle>
+              <AISummaryText>{aiSummary}</AISummaryText>
+            </AISummaryBox>
+          )}
           <ArticleExcerpt>
             {news.summary || news.excerpt || news.content || 'No description available.'}
           </ArticleExcerpt>

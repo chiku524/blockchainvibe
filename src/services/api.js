@@ -230,6 +230,16 @@ export const aiAPI = {
     const response = await api.get('/api/metta/status');
     return response.data;
   },
+
+  explainAirdrop: async (payload) => {
+    const response = await api.post('/api/ai/explain-airdrop', payload);
+    return response.data;
+  },
+
+  summarizeArticle: async (payload) => {
+    const response = await api.post('/api/ai/summarize-article', payload);
+    return response.data;
+  },
 };
 
 export default api;

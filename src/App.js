@@ -40,6 +40,10 @@ const ContactUsPage = lazy(() => import('./components/ContactUsPage'));
 const BugReportPage = lazy(() => import('./components/BugReportPage'));
 const AIInsights = lazy(() => import('./components/AIInsights'));
 const LaunchesPage = lazy(() => import('./components/Launches/LaunchesPage'));
+const AlertsPage = lazy(() => import('./components/AlertsPage'));
+const AirdropsLanding = lazy(() => import('./components/AirdropsLanding'));
+const NewTokenLaunchesPage = lazy(() => import('./components/NewTokenLaunchesPage'));
+const CalendarPage = lazy(() => import('./components/CalendarPage'));
 
 // Enhanced React Query configuration with optimized caching
 const queryClient = new QueryClient({
@@ -265,6 +269,34 @@ const AppContent = () => {
               <Layout>
                 <Suspense fallback={<LoadingSpinner message="Loading launches & drops..." />}>
                   <LaunchesPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/alerts" element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner message="Loading alerts..." />}>
+                  <AlertsPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/airdrops" element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner message="Loading..." />}>
+                  <AirdropsLanding />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/new-token-launches" element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner message="Loading..." />}>
+                  <NewTokenLaunchesPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/calendar" element={
+              <Layout>
+                <Suspense fallback={<LoadingSpinner message="Loading calendar..." />}>
+                  <CalendarPage />
                 </Suspense>
               </Layout>
             } />

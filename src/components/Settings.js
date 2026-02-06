@@ -9,7 +9,10 @@ import {
   Palette,
   Save,
   Camera,
-  Crown
+  Crown,
+  Bookmark,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTheme } from '../contexts/ThemeContext';
@@ -471,14 +474,61 @@ const Settings = () => {
     }
   };
 
+  const MY_TOPICS_KEY = 'blockchainvibe_my_topics';
+  const loadMyTopics = () => {
+    try {
+      const raw = localStorage.getItem(MY_TOPICS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  };
+  const [myTopics, setMyTopics] = useState(loadMyTopics);
+  const [newTopicLabel, setNewTopicLabel] = useState('');
+  const [newTopicType, setNewTopicType] = useState('search');
+  const [newTopicValue, setNewTopicValue] = useState('');
+
   const sidebarItems = [
     { id: 'profile', label: 'Profile', icon: <User size={18} /> },
+    { id: 'my-topics', label: 'My topics', icon: <Bookmark size={18} /> },
     { id: 'preferences', label: 'Preferences', icon: <SettingsIcon size={18} /> },
     { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> },
     { id: 'privacy', label: 'Privacy', icon: <Shield size={18} /> },
     { id: 'appearance', label: 'Appearance', icon: <Palette size={18} /> },
     ...(subscriptionEnabled ? [{ id: 'subscription', label: 'Subscription', icon: <Crown size={18} /> }] : [])
   ];
+
+  useEffect(() => {
+    const hash = (window.location.hash || '').replace(/^#/, '');
+    if (hash && sidebarItems.some((i) => i.id === hash)) setActiveSection(hash);
+  }, []);
+
+  const addMyTopic = () => {
+    const label = (newTopicLabel || '').trim();
+    const value = (newTopicValue || '').trim() || label;
+    if (!label || !value) {
+      toast.error('Label and value are required');
+      return;
+    }
+    const list = loadMyTopics();
+    if (list.length >= 3) {
+      toast.error('Maximum 3 topics. Remove one first.');
+      return;
+    }
+    const next = [...list, { id: `t-${Date.now()}`, label, type: newTopicType, value }];
+    localStorage.setItem(MY_TOPICS_KEY, JSON.stringify(next));
+    setMyTopics(next);
+    setNewTopicLabel('');
+    setNewTopicValue('');
+    toast.success('Topic added. It will appear on your Dashboard.');
+  };
+
+  const removeMyTopic = (id) => {
+    const next = loadMyTopics().filter((t) => (t.id || t.label) !== id);
+    localStorage.setItem(MY_TOPICS_KEY, JSON.stringify(next));
+    setMyTopics(next);
+    toast.success('Topic removed');
+  };
 
   return (
     <SettingsContainer>
@@ -624,6 +674,56 @@ const Settings = () => {
                   onChange={(e) => handleProfileChange('linkedin', e.target.value)}
                   placeholder="linkedin.com/in/username"
                 />
+              </FormGroup>
+            </>
+          )}
+
+          {activeSection === 'my-topics' && (
+            <>
+              <SectionTitle id="my-topics">
+                <Bookmark size={24} />
+                My topics
+              </SectionTitle>
+              <FormGroup>
+                <Label>Quick links on your Dashboard (max 3)</Label>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                  Add up to 3 topics. Each appears as a one-click link on the Dashboard sidebar.
+                </p>
+                {myTopics.length > 0 && (
+                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0' }}>
+                    {myTopics.map((t) => (
+                      <li key={t.id || t.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--border)' }}>
+                        <span>{t.label} ({t.type === 'category' ? 'Category' : 'Search'}: {t.value})</span>
+                        <button type="button" onClick={() => removeMyTopic(t.id || t.label)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', padding: '0.25rem' }} aria-label="Remove">
+                          <Trash2 size={16} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {myTopics.length < 3 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+                    <div style={{ minWidth: '120px' }}>
+                      <Label>Label</Label>
+                      <Input placeholder="e.g. DeFi" value={newTopicLabel} onChange={(e) => setNewTopicLabel(e.target.value)} />
+                    </div>
+                    <div style={{ minWidth: '100px' }}>
+                      <Label>Type</Label>
+                      <select value={newTopicType} onChange={(e) => setNewTopicType(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--background)', color: 'var(--text)' }}>
+                        <option value="search">Search</option>
+                        <option value="category">Category</option>
+                      </select>
+                    </div>
+                    <div style={{ minWidth: '140px' }}>
+                      <Label>{newTopicType === 'category' ? 'Category' : 'Search term'}</Label>
+                      <Input placeholder={newTopicType === 'category' ? 'defi, nft, ...' : 'Bitcoin'} value={newTopicValue} onChange={(e) => setNewTopicValue(e.target.value)} />
+                    </div>
+                    <button type="button" onClick={addMyTopic} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', background: 'var(--primary)', color: 'var(--text-inverse)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}>
+                      <Plus size={16} />
+                      Add topic
+                    </button>
+                  </div>
+                )}
               </FormGroup>
             </>
           )}

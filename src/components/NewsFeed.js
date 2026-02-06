@@ -11,10 +11,13 @@ import toast from 'react-hot-toast';
 import NewsCard from './NewsCard';
 import NewsCardSkeleton from './NewsCardSkeleton';
 import ErrorState from './ErrorState';
+import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { useNews } from '../hooks/useNews';
 import { useUser } from '../hooks/useUser';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import PageMeta from './PageMeta';
 import { getErrorMessage } from '../utils/errorHandler';
+import { newsAPI } from '../services/api';
 
 const FeedContainer = styled.div`
   max-width: 1200px;
@@ -265,7 +268,37 @@ const EmptyStateDescription = styled.p`
   margin-bottom: 2rem;
 `;
 
+const TrendingStrip = styled.div`
+  margin-bottom: 1rem;
+`;
+const TrendingStripScroll = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.25rem 0;
+`;
+const TrendingChip = styled.button`
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  border: 1px solid ${props => props.theme.colors.border};
+  background: ${props => props.theme.colors.surface};
+  color: ${props => props.theme.colors.text};
+  font-size: ${props => props.theme.fontSize.sm};
+  font-weight: 500;
+  cursor: pointer;
+  transition: all ${props => props.theme.transitions.fast};
+  &:hover {
+    border-color: ${props => props.theme.colors.primary};
+    color: ${props => props.theme.colors.primary};
+    background: ${props => props.theme.colors.primary}10;
+  }
+`;
+
+const TRENDING_TERMS = ['Bitcoin', 'Ethereum', 'Solana', 'DeFi', 'NFT', 'Airdrops', 'Layer 2', 'Web3'];
+
 const NewsFeed = ({ category, timeframe, searchQuery }) => {
+  const navigate = useNavigate();
   const [sortBy, setSortBy] = useState('relevance');
   const [page, setPage] = useState(1);
   const [allNews, setAllNews] = useState([]);
@@ -279,7 +312,7 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
     { value: 'all', label: 'All Time' }
   ];
 
-  const categoryFilters = [
+  const staticCategoryFilters = [
     { value: 'all', label: 'All Categories' },
     { value: 'defi', label: 'DeFi' },
     { value: 'nft', label: 'NFTs' },
@@ -288,7 +321,23 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
     { value: 'gaming', label: 'Gaming' },
     { value: 'regulation', label: 'Regulation' }
   ];
-  
+
+  const { data: categoriesData } = useQuery(
+    ['categories'],
+    () => newsAPI.getCategories(),
+    { staleTime: 10 * 60 * 1000, cacheTime: 15 * 60 * 1000 }
+  );
+
+  const categoryFilters = (categoriesData?.categories?.length > 0)
+    ? [
+        { value: 'all', label: 'All Categories' },
+        ...categoriesData.categories.map((c) => ({
+          value: (c.name || '').toLowerCase().replace(/\s+/g, '-'),
+          label: c.count != null ? `${c.name} (${c.count})` : c.name
+        }))
+      ]
+    : staticCategoryFilters;
+
   const { data: newsData, isLoading, error, refetch, isFetching } = useNews({
     category: categoryFilter,
     timeframe: timeFilter === 'all' ? null : timeFilter,
@@ -299,8 +348,6 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
   });
 
   const { trackActivity } = useUser();
-
-  useDocumentTitle(searchQuery ? `Search: ${searchQuery}` : 'News Feed');
 
   useEffect(() => {
     if (newsData?.news) {
@@ -352,7 +399,7 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
     return (
       <FeedContainer>
         <FeedHeader>
-          <FeedTitle>Blockchain News Feed</FeedTitle>
+          <FeedTitle>News Hub</FeedTitle>
           <FeedSubtitle>Loading…</FeedSubtitle>
         </FeedHeader>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
@@ -413,6 +460,10 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
 
   return (
     <FeedContainer>
+      <PageMeta
+        title={searchQuery ? `Search: ${searchQuery}` : undefined}
+        description={searchQuery ? `Search results for "${searchQuery}" in crypto and blockchain news.` : undefined}
+      />
       {serviceUnavailable && (
         <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
           <strong>Service notice:</strong> {newsData?.message || 'News service is temporarily unavailable. Please try again later.'}
@@ -421,7 +472,7 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
       <FeedHeader>
         <div>
           <FeedTitle>
-            {searchQuery ? `Search Results for "${searchQuery}"` : 'Blockchain News Feed'}
+            {searchQuery ? `Search Results for "${searchQuery}"` : 'News Hub'}
           </FeedTitle>
           <FeedSubtitle>
             {newsData?.total_count || allNews.length} articles • 
@@ -456,6 +507,18 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
         </FeedControls>
       </FeedHeader>
 
+      {!searchQuery && (
+        <TrendingStrip>
+          <TrendingStripScroll>
+            {TRENDING_TERMS.map((term) => (
+              <TrendingChip key={term} type="button" onClick={() => navigate(`/search?q=${encodeURIComponent(term)}`)}>
+                {term}
+              </TrendingChip>
+            ))}
+          </TrendingStripScroll>
+        </TrendingStrip>
+      )}
+
       <FilterBar>
         <SelectGroup>
           <SelectLabel htmlFor="newsfeed-timeframe">Timeframe</SelectLabel>
@@ -474,6 +537,24 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
           </Select>
         </SelectGroup>
       </FilterBar>
+
+      {!searchQuery && categoryFilters.length > 0 && (
+        <TrendingStrip>
+          <TrendingStripScroll>
+            {categoryFilters.map((f) => (
+              <TrendingChip
+                key={f.value}
+                type="button"
+                className={categoryFilter === f.value ? 'active' : ''}
+                onClick={() => setCategoryFilter(f.value)}
+                style={categoryFilter === f.value ? { borderColor: 'var(--primary)', color: 'var(--primary)', background: 'var(--primary)15' } : {}}
+              >
+                {f.value === 'all' ? 'All' : f.label.replace(/\s*\(\d+\)\s*$/, '').trim() || f.value}
+              </TrendingChip>
+            ))}
+          </TrendingStripScroll>
+        </TrendingStrip>
+      )}
 
       {newsData && (
         <StatsContainer>

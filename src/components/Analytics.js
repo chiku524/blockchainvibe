@@ -11,7 +11,6 @@ import {
   Calendar
 } from 'lucide-react';
 import { useUser } from '../hooks/useUser';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import api from '../services/api';
 import InteractiveChart from './InteractiveChart';
 
@@ -269,7 +268,6 @@ const defaultTrendSeries = () => {
 
 const Analytics = () => {
   const { isLoading } = useUser();
-  useDocumentTitle('Analytics');
   const [analyticsData, setAnalyticsData] = useState({
     articlesRead: 0,
     timeSpent: 0,

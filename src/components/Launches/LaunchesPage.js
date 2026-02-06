@@ -7,13 +7,18 @@ import {
   Image as ImageIcon,
   RefreshCw,
   ExternalLink,
+  Sparkles,
+  X,
+  AlertTriangle,
+  ListChecks,
+  Bell,
 } from 'lucide-react';
-import { launchesAPI } from '../../services/api';
+import { launchesAPI, aiAPI } from '../../services/api';
 import LoadingSpinner from '../LoadingSpinner';
 import TrendingCoinsWidget from './TrendingCoinsWidget';
 import AirdropsWidget from './AirdropsWidget';
 import LaunchesCalendar from './LaunchesCalendar';
-import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+import toast from 'react-hot-toast';
 
 const Page = styled.div`
   min-height: 100vh;
@@ -216,7 +221,133 @@ const EmptyState = styled.p`
   text-align: center;
 `;
 
+const ExplainBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  font-size: ${(p) => p.theme.fontSize.xs};
+  color: ${(p) => p.theme.colors.primary};
+  background: ${(p) => p.theme.colors.primary}12;
+  border: 1px solid ${(p) => p.theme.colors.primary}40;
+  border-radius: ${(p) => p.theme.borderRadius.md};
+  cursor: pointer;
+  margin-top: 0.5rem;
+
+  &:hover {
+    background: ${(p) => p.theme.colors.primary}20;
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+`;
+
+const ModalBox = styled.div`
+  background: ${(p) => p.theme.colors.surface};
+  border: 1px solid ${(p) => p.theme.colors.border};
+  border-radius: ${(p) => p.theme.borderRadius.xl};
+  max-width: 480px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: ${(p) => p.theme.shadows['2xl']};
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid ${(p) => p.theme.colors.border};
+`;
+
+const ModalTitle = styled.h3`
+  font-size: ${(p) => p.theme.fontSize.lg};
+  font-weight: ${(p) => p.theme.fontWeight.semibold};
+  color: ${(p) => p.theme.colors.text};
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const ModalClose = styled.button`
+  background: none;
+  border: none;
+  color: ${(p) => p.theme.colors.textSecondary};
+  cursor: pointer;
+  padding: 0.25rem;
+
+  &:hover {
+    color: ${(p) => p.theme.colors.text};
+  }
+`;
+
+const ModalBody = styled.div`
+  padding: 1.25rem;
+`;
+
+const ExplainSummary = styled.p`
+  font-size: ${(p) => p.theme.fontSize.sm};
+  color: ${(p) => p.theme.colors.text};
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+`;
+
+const ExplainSection = styled.div`
+  margin-top: 1rem;
+`;
+
+const ExplainSectionTitle = styled.h4`
+  font-size: ${(p) => p.theme.fontSize.sm};
+  font-weight: ${(p) => p.theme.fontWeight.semibold};
+  color: ${(p) => p.theme.colors.text};
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const ExplainList = styled.ul`
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: ${(p) => p.theme.fontSize.sm};
+  color: ${(p) => p.theme.colors.textSecondary};
+  line-height: 1.6;
+`;
+
 const TAB_KEYS = { airdrops: 'airdrops', tokens: 'tokens', nfts: 'nfts' };
+const AIRDROP_REMINDERS_KEY = 'blockchainvibe_airdrop_reminders';
+
+function getAirdropReminders() {
+  try {
+    const raw = localStorage.getItem(AIRDROP_REMINDERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function addAirdropReminder(item) {
+  const list = getAirdropReminders();
+  const id = item.id || item.link || item.title || `${Date.now()}`;
+  if (list.some((r) => (r.id || r.link) === id)) return false;
+  list.push({ id, title: item.title, link: item.link || item.url, source: item.source });
+  localStorage.setItem(AIRDROP_REMINDERS_KEY, JSON.stringify(list));
+  return true;
+}
 
 /** Format chain ID for display (e.g. solana -> Solana) */
 function formatChainId(id) {
@@ -233,8 +364,44 @@ function stripUrls(text) {
 
 
 export default function LaunchesPage() {
-  useDocumentTitle('Launches & Drops');
   const [activeTab, setActiveTab] = useState(TAB_KEYS.airdrops);
+  const [explainAirdrop, setExplainAirdrop] = useState(null);
+  const [explainResult, setExplainResult] = useState(null);
+  const [explainLoading, setExplainLoading] = useState(false);
+
+  const handleExplainWithAI = async (a) => {
+    setExplainAirdrop(a);
+    setExplainResult(null);
+    setExplainLoading(true);
+    try {
+      const res = await aiAPI.explainAirdrop({
+        title: a.title,
+        source: a.source,
+        date: a.date,
+        link: a.link,
+      });
+      if (res.success) setExplainResult(res);
+      else toast.error(res.message || 'Could not load explanation');
+    } catch (e) {
+      toast.error('Failed to get AI explanation');
+    } finally {
+      setExplainLoading(false);
+    }
+  };
+
+  const closeExplainModal = () => {
+    setExplainAirdrop(null);
+    setExplainResult(null);
+  };
+
+  const handleRemindMe = (e, a) => {
+    e.stopPropagation();
+    if (addAirdropReminder(a)) {
+      toast.success('Added to your airdrop reminders (see Dashboard)');
+    } else {
+      toast('Already in your reminders');
+    }
+  };
 
   const { data, isLoading, isFetching, refetch } = useQuery(
     ['launches', 'drops'],
@@ -313,17 +480,47 @@ export default function LaunchesPage() {
             <EmptyState>No airdrops available at the moment. Check back later.</EmptyState>
           ) : (
             airdrops.map((a, i) => (
-              <Card key={a.id || i} href={a.link || '#'} target="_blank" rel="noopener noreferrer">
+              <Card key={a.id || i} as="div" style={{ cursor: 'default' }}>
                 <CardIcon>
                   <Gift size={24} color="var(--primary, #6366f1)" />
                 </CardIcon>
                 <CardBody>
-                  <CardTitle>{a.title}</CardTitle>
+                  <CardTitle>
+                    {a.link ? (
+                      <a href={a.link} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {a.title}
+                      </a>
+                    ) : (
+                      a.title
+                    )}
+                  </CardTitle>
                   <CardMeta>
                     {a.source} {a.date && ` · ${new Date(a.date).toLocaleDateString()}`}
                   </CardMeta>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                    <ExplainBtn
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleExplainWithAI(a); }}
+                      disabled={explainLoading && explainAirdrop?.title === a.title}
+                    >
+                      <Sparkles size={12} />
+                      Explain with AI
+                    </ExplainBtn>
+                    <ExplainBtn
+                      type="button"
+                      onClick={(e) => handleRemindMe(e, a)}
+                      style={{ background: 'transparent', borderColor: 'var(--text-secondary)' }}
+                    >
+                      <Bell size={12} />
+                      Remind me
+                    </ExplainBtn>
+                  </div>
                 </CardBody>
-                <CardLink />
+                {a.link && (
+                  <a href={a.link} target="_blank" rel="noopener noreferrer" aria-label="Open link">
+                    <CardLink />
+                  </a>
+                )}
               </Card>
             ))
           ))}
@@ -384,6 +581,54 @@ export default function LaunchesPage() {
             ))
           ))}
       </List>
+
+      {explainAirdrop && (
+        <ModalOverlay onClick={closeExplainModal}>
+          <ModalBox onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>
+                <Sparkles size={20} />
+                AI explains: {explainAirdrop.title}
+              </ModalTitle>
+              <ModalClose type="button" onClick={closeExplainModal} aria-label="Close">
+                <X size={20} />
+              </ModalClose>
+            </ModalHeader>
+            <ModalBody>
+              {explainLoading ? (
+                <LoadingSpinner message="Getting AI explanation..." />
+              ) : explainResult ? (
+                <>
+                  <ExplainSummary>{explainResult.summary}</ExplainSummary>
+                  <ExplainSection>
+                    <ExplainSectionTitle><ListChecks size={16} /> How to qualify</ExplainSectionTitle>
+                    <ExplainList>
+                      {explainResult.steps.map((step, i) => (
+                        <li key={i}>{step}</li>
+                      ))}
+                    </ExplainList>
+                  </ExplainSection>
+                  <ExplainSection>
+                    <ExplainSectionTitle><AlertTriangle size={16} /> Risks to consider</ExplainSectionTitle>
+                    <ExplainList>
+                      {explainResult.risks.map((risk, i) => (
+                        <li key={i}>{risk}</li>
+                      ))}
+                    </ExplainList>
+                  </ExplainSection>
+                  {explainResult.link && (
+                    <p style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
+                      <a href={explainResult.link} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>
+                        Open official link →
+                      </a>
+                    </p>
+                  )}
+                </>
+              ) : null}
+            </ModalBody>
+          </ModalBox>
+        </ModalOverlay>
+      )}
     </Page>
   );
 }
