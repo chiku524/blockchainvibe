@@ -430,15 +430,15 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
       <FeedContainer>
         {serviceUnavailable && (
           <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
-            <strong>Service notice:</strong> {newsData?.message || 'News service is temporarily unavailable. Please try again later.'}
+            <strong>Service notice:</strong> {newsData?.message || 'We couldn’t load news right now. Please try again in a moment.'}
           </div>
         )}
         <EmptyState>
           <EmptyStateIcon>📰</EmptyStateIcon>
-          <EmptyStateTitle>{serviceUnavailable ? 'News Service Unavailable' : 'No News Found'}</EmptyStateTitle>
+          <EmptyStateTitle>{serviceUnavailable ? 'News temporarily unavailable' : 'No news found'}</EmptyStateTitle>
           <EmptyStateDescription>
             {serviceUnavailable
-              ? (newsData?.message || 'News service is temporarily unavailable. Please try again in a few minutes.')
+              ? (newsData?.message || 'We couldn’t load news right now. Please try again in a moment.')
               : searchQuery
                 ? `No news found for "${searchQuery}". Try a different search term.`
                 : 'No news available for the selected filters. Try adjusting your preferences.'
@@ -466,7 +466,7 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
       />
       {serviceUnavailable && (
         <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
-          <strong>Service notice:</strong> {newsData?.message || 'News service is temporarily unavailable. Please try again later.'}
+          <strong>Service notice:</strong> {newsData?.message || 'We couldn’t load news right now. Please try again in a moment.'}
         </div>
       )}
       <FeedHeader>

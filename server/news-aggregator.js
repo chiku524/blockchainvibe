@@ -337,18 +337,22 @@ export class NewsAggregator {
   }
 
   // Fetch from news APIs (env provides runtime keys e.g. NEWSAPI_KEY; apiOptions = { sortBy, timeFilter })
+  // CryptoCompare works without a key (optional key for higher rate limits); NewsAPI_ai/org need NEWSAPI_KEY
   async fetchFromAPIs(limit, env = {}, apiOptions = {}) {
+    const optionalKeyApis = ['CryptoCompare'];
     const enabledAPIs = NEWS_SOURCES.NEWS_APIS
       .filter(api => {
         if (!api.enabled) return false;
-        if (api.name === 'NewsAPI_ai' || api.name === 'NewsAPI_org') return !!(api.apiKey || env.NEWSAPI_KEY);
+        if (optionalKeyApis.includes(api.name)) return true;
+        if (api.name === 'NewsAPI_ai') return !!(api.apiKey || env.NEWSAPI_KEY);
+        if (api.name === 'NewsAPI_org') return !!(api.apiKey || env.NEWSAPI_KEY || env.NEWS_API_KEY);
         return !!api.apiKey;
       })
       .map(api => ({
         ...api,
-        apiKey: api.apiKey || ((api.name === 'NewsAPI_ai' || api.name === 'NewsAPI_org') ? env.NEWSAPI_KEY : null)
+        apiKey: api.apiKey || (api.name === 'NewsAPI_ai' ? env.NEWSAPI_KEY : (api.name === 'NewsAPI_org' ? (env.NEWS_API_KEY || env.NEWSAPI_KEY) : null))
       }))
-      .filter(api => api.apiKey);
+      .filter(api => optionalKeyApis.includes(api.name) || api.apiKey);
     const newsPromises = enabledAPIs.map(api => this.fetchFromAPI(api, limit, apiOptions));
     
     try {
@@ -408,6 +412,10 @@ export class NewsAggregator {
 
       if (api.name === 'NewsAPI_ai') {
         return await this.fetchFromNewsAPIAi(api, limit, sortBy, timeFilter);
+      }
+
+      if (api.name === 'CryptoCompare') {
+        return await this.fetchFromCryptoCompare(api, limit);
       }
 
       let url = api.url;
@@ -478,6 +486,57 @@ export class NewsAggregator {
       console.error(`Error fetching from ${api.name}:`, error.message || error);
       return [];
     }
+  }
+
+  // Fetch from CryptoCompare (free tier, no key required) - GET, returns Data array
+  async fetchFromCryptoCompare(api, limit) {
+    const url = `${api.url}?lang=EN`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.feedTimeout);
+    try {
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'BlockchainVibe/1.0 (News Aggregator)' },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error(`CryptoCompare returned ${response.status}`);
+      const data = await response.json();
+      const raw = Array.isArray(data.Data) ? data.Data : [];
+      return this.transformCryptoCompareData(raw.slice(0, Math.max(limit, 50)), api);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') console.warn('[CryptoCompare] timed out');
+      else console.error('[CryptoCompare]', err.message || err);
+      return [];
+    }
+  }
+
+  transformCryptoCompareData(raw, api) {
+    return raw.map((a) => {
+      const url = a.url || a.guid || '';
+      const publishedAt = a.published_on
+        ? new Date(a.published_on * 1000).toISOString()
+        : new Date().toISOString();
+      const sourceName = (a.source_info && a.source_info.name) ? a.source_info.name : (a.source || 'CryptoCompare');
+      return {
+        id: this.safeArticleId(url, 'CryptoCompare'),
+        title: a.title || 'Untitled',
+        url,
+        source: sourceName,
+        source_id: a.source || null,
+        published_at: publishedAt,
+        summary: (a.body || '').substring(0, 300),
+        content: a.body || '',
+        excerpt: (a.body || '').substring(0, 200),
+        categories: this.categorizeContent((a.title || '') + ' ' + (a.body || '')),
+        tags: this.extractTags((a.title || '') + ' ' + (a.body || '')),
+        image_url: a.imageurl || null,
+        author: null,
+        relevance_score: 0.5,
+        _source_api: 'CryptoCompare',
+        engagement_metrics: { likes: 0, views: 0, comments: 0 }
+      };
+    });
   }
 
   // Transform NewsAPI.ai (Event Registry) response to our format

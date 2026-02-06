@@ -547,10 +547,10 @@ export const NEWS_SOURCES = {
     {
       name: "NewsAPI_org",
       url: "https://newsapi.org/v2/everything",
-      apiKey: null,
-      enabled: false, // Developer plan = localhost only; use NewsAPI_ai for production
+      apiKey: null, // Injected from env.NEWS_API_KEY or env.NEWSAPI_KEY
+      enabled: true, // Set NEWS_API_KEY secret for production (paid plan required for non-localhost)
       rateLimit: 100,
-      cost: "Developer: localhost only",
+      cost: "Developer: localhost only; paid for production domain",
       priority: 2
     },
     {

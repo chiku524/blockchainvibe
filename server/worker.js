@@ -685,7 +685,7 @@ async function handlePersonalizedNews(request, env) {
       () => 0
     );
     
-    const body = {
+    const responseBody = {
       articles: newsItems,
       total_count: newsItems.length,
       user_relevance_score: userRelevanceScore,
@@ -693,10 +693,10 @@ async function handlePersonalizedNews(request, env) {
       type: 'personalized'
     };
     if (newsItems.length === 0) {
-      body.serviceUnavailable = true;
-      body.message = 'News service is temporarily unavailable. Please try again in a few minutes.';
+      responseBody.serviceUnavailable = true;
+      responseBody.message = 'News service is temporarily unavailable. Please try again in a few minutes.';
     }
-    return new Response(JSON.stringify(body), {
+    return new Response(JSON.stringify(responseBody), {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store, no-cache, must-revalidate',

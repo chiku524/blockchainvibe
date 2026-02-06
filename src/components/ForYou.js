@@ -502,7 +502,7 @@ const ForYou = () => {
 
       {(forYouData?.serviceUnavailable || forYouData?.message) && (
         <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
-          <strong>Service notice:</strong> {forYouData?.message || 'News service is temporarily unavailable. Please try again later.'}
+          <strong>Service notice:</strong> {forYouData?.message || 'We couldn’t load news right now. Please try again in a moment.'}
         </div>
       )}
 
