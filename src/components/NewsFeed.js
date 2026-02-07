@@ -123,6 +123,12 @@ const ControlButton = styled.button`
     color: ${props => props.theme.colors.textInverse};
     border-color: ${props => props.theme.colors.primary};
   }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 `;
 
 const FilterBar = styled.div`
@@ -377,8 +383,11 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
   const handleRefresh = () => {
     setPage(1);
     setAllNews([]);
-    refetch();
-    toast.success('News feed refreshed!');
+    refetch().then(() => {
+      toast.success('News feed refreshed!');
+    }).catch(() => {
+      toast.error('Could not refresh. Try again.');
+    });
   };
 
   const handleNewsInteraction = async (newsId, action) => {
@@ -444,9 +453,9 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
                 : 'No news available for the selected filters. Try adjusting your preferences.'
             }
           </EmptyStateDescription>
-          <ControlButton onClick={handleRefresh}>
-            <RefreshCw size={18} />
-            Try Again
+          <ControlButton onClick={handleRefresh} disabled={isFetching} aria-busy={isFetching}>
+            <RefreshCw size={18} className={isFetching ? 'animate-spin' : undefined} />
+            {isFetching ? 'Loading...' : 'Try Again'}
           </ControlButton>
         </EmptyState>
       </FeedContainer>
@@ -500,9 +509,14 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
             Time
           </ControlButton>
           
-          <ControlButton onClick={handleRefresh}>
-            <RefreshCw size={18} />
-            Refresh
+          <ControlButton
+            onClick={handleRefresh}
+            disabled={isFetching}
+            aria-busy={isFetching}
+            title={isFetching ? 'Refreshing...' : 'Refresh feed'}
+          >
+            <RefreshCw size={18} className={isFetching ? 'animate-spin' : undefined} />
+            {isFetching ? 'Refreshing...' : 'Refresh'}
           </ControlButton>
         </FeedControls>
       </FeedHeader>

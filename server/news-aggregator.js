@@ -38,12 +38,13 @@ export class NewsAggregator {
     const env = options.env || {};
 
     try {
-      // Fetch from RSS feeds (primary source)
-      const rssNews = await this.fetchFromRSSFeeds(limit * 2);
-      
-      // Fetch from APIs if enabled (API keys can come from options.env); pass sort/time for efficient trending
-      const apiNews = await this.fetchFromAPIs(limit, env, { sortBy, timeFilter });
-      
+      // Fetch RSS and APIs in parallel so we get API results (e.g. CryptoCompare) even when RSS is slow or times out.
+      // Previously RSS ran first and the worker's 25s timeout often hit before we reached fetchFromAPIs.
+      const [rssNews, apiNews] = await Promise.all([
+        this.fetchFromRSSFeeds(limit * 2),
+        this.fetchFromAPIs(limit, env, { sortBy, timeFilter })
+      ]);
+
       // Combine and deduplicate using enhanced deduplication
       const allNews = deduplicateArticles([...rssNews, ...apiNews], 0.75);
       
