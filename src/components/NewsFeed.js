@@ -17,7 +17,7 @@ import { useNews } from '../hooks/useNews';
 import { useUser } from '../hooks/useUser';
 import PageMeta from './PageMeta';
 import { getErrorMessage } from '../utils/errorHandler';
-import { newsAPI } from '../services/api';
+import { newsAPI, getNewsApiBase } from '../services/api';
 
 const FeedContainer = styled.div`
   max-width: 1200px;
@@ -114,8 +114,10 @@ const ControlButton = styled.button`
     border-color: ${props => props.theme.colors.primary};
   }
   
-  &:active {
-    transform: scale(0.98);
+  &:active:not(:disabled) {
+    transform: scale(0.92);
+    opacity: 0.85;
+    background: ${props => props.theme.colors.surfaceHover};
   }
   
   &.active {
@@ -125,9 +127,16 @@ const ControlButton = styled.button`
   }
 
   &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+    opacity: 0.8;
+    cursor: wait;
     pointer-events: none;
+  }
+  
+  &.pressed {
+    transform: scale(0.92);
+    opacity: 0.85;
+    background: ${props => props.theme.colors.surfaceHover};
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -396,7 +405,10 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
     setPage(prev => prev + 1);
   };
 
+  const [refreshPressed, setRefreshPressed] = useState(false);
   const handleRefresh = () => {
+    setRefreshPressed(true);
+    setTimeout(() => setRefreshPressed(false), 200);
     setPage(1);
     setAllNews([]);
     refetch().then(() => {
@@ -451,11 +463,18 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
 
   if (!allNews || allNews.length === 0) {
     const serviceUnavailable = newsData?.serviceUnavailable || newsData?.message;
+    const apiOrigin = getNewsApiBase();
     return (
       <FeedContainer>
         {serviceUnavailable && (
           <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.5)', borderRadius: '8px', color: 'inherit' }}>
             <strong>Service notice:</strong> {newsData?.message || 'We couldn’t load news right now. Please try again in a moment.'}
+            <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', opacity: 0.9 }}>
+              <strong>What we fetch:</strong> The app requests articles from the BlockchainVibe API (your Cloudflare Worker), which tries RSS feeds (CoinDesk, CoinTelegraph, etc.), the CryptoCompare news API (no key), and optionally NewsAPI when keys are set. You see this when the API responded but returned zero articles — both the main aggregator and the CryptoCompare fallback came back empty.
+            </div>
+            <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', opacity: 0.9 }}>
+              <strong>Common causes:</strong> (1) Worker not deployed or outdated — run <code style={{ background: 'rgba(0,0,0,0.1)', padding: '0.1em 0.3em', borderRadius: 4 }}>cd server &amp;&amp; npx wrangler deploy</code>. (2) Wrong API URL — we are calling <strong>{apiOrigin || 'unknown'}</strong>. (3) External sources unreachable from the worker.
+            </div>
           </div>
         )}
         <EmptyState>
@@ -469,7 +488,12 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
                 : 'No news available for the selected filters. Try adjusting your preferences.'
             }
           </EmptyStateDescription>
-          <ControlButton onClick={handleRefresh} disabled={isFetching} aria-busy={isFetching}>
+          <ControlButton
+            onClick={handleRefresh}
+            disabled={isFetching}
+            aria-busy={isFetching}
+            className={refreshPressed || isFetching ? 'pressed' : ''}
+          >
             <RefreshCw size={18} className={isFetching ? 'animate-spin' : undefined} />
             {isFetching ? 'Loading...' : 'Try Again'}
           </ControlButton>
@@ -530,6 +554,7 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
             disabled={isFetching}
             aria-busy={isFetching}
             title={isFetching ? 'Refreshing...' : 'Refresh feed'}
+            className={refreshPressed || isFetching ? 'pressed' : ''}
           >
             <RefreshCw size={18} className={isFetching ? 'animate-spin' : undefined} />
             {isFetching ? 'Refreshing...' : 'Refresh'}

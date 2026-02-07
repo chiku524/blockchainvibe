@@ -12,6 +12,16 @@ const getApiUrl = () => {
 
 const API_BASE_URL = getApiUrl();
 
+/** Public for UI to show which API we're calling (e.g. empty state). */
+export function getNewsApiBase() {
+  try {
+    const url = getApiUrl();
+    return url ? new URL(url).origin : '';
+  } catch {
+    return '';
+  }
+}
+
 // Create axios instance with enhanced configuration
 const api = axios.create({
   baseURL: API_BASE_URL,

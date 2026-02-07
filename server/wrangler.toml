@@ -25,3 +25,19 @@ database_id = "4d7784cc-f73a-4d7d-a108-fc283cc21916"
 [[r2_buckets]]
 bucket_name = "blockchainvibe-assets"
 binding = "blockchainvibe_assets"
+
+# Observability – keep in sync with Cloudflare dashboard (Workers → your worker → Settings → Observability)
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 1

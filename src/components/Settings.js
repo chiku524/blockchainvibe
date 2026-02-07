@@ -82,12 +82,11 @@ const SettingsSubtitle = styled.p`
 `;
 
 const SettingsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 
-  @media (min-width: ${props => props.theme.breakpoints.lg}) {
-    grid-template-columns: 1fr 2fr;
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
     gap: 2rem;
   }
 `;

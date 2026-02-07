@@ -17,7 +17,6 @@ import { launchesAPI, aiAPI } from '../../services/api';
 import LoadingSpinner from '../LoadingSpinner';
 import TrendingCoinsWidget from './TrendingCoinsWidget';
 import AirdropsWidget from './AirdropsWidget';
-import LaunchesCalendar from './LaunchesCalendar';
 import toast from 'react-hot-toast';
 
 const Page = styled.div`
@@ -94,7 +93,7 @@ const WidgetsRow = styled.div`
     grid-template-columns: repeat(2, 1fr);
   }
   @media (min-width: ${(p) => p.theme.breakpoints.lg}) {
-    grid-template-columns: 1fr 1fr 1.2fr;
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
   }
 `;
@@ -416,7 +415,6 @@ export default function LaunchesPage() {
   const trendingCoins = data?.trendingCoins ?? [];
   const newTokens = data?.newTokens ?? [];
   const nftDrops = data?.nftDrops ?? [];
-  const calendarEvents = data?.calendarEvents ?? [];
 
   if (isLoading && !data) {
     return (
@@ -438,7 +436,6 @@ export default function LaunchesPage() {
       <WidgetsRow>
         <TrendingCoinsWidget coins={trendingCoins} compact maxItems={5} />
         <AirdropsWidget airdrops={airdrops} compact maxItems={5} />
-        <LaunchesCalendar events={calendarEvents} compact />
       </WidgetsRow>
 
       <Tabs>
