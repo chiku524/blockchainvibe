@@ -7,8 +7,6 @@ import {
   TrendingUp, 
   Brain, 
   Shield, 
-  Zap, 
-  Users, 
   Star,
   Newspaper,
   Gift

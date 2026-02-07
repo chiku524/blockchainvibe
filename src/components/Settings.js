@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQueryClient } from 'react-query';
 import styled from 'styled-components';
 import { 
@@ -488,7 +488,7 @@ const Settings = () => {
   const [newTopicType, setNewTopicType] = useState('search');
   const [newTopicValue, setNewTopicValue] = useState('');
 
-  const sidebarItems = [
+  const sidebarItems = useMemo(() => [
     { id: 'profile', label: 'Profile', icon: <User size={18} /> },
     { id: 'my-topics', label: 'My topics', icon: <Bookmark size={18} /> },
     { id: 'preferences', label: 'Preferences', icon: <SettingsIcon size={18} /> },
@@ -496,12 +496,12 @@ const Settings = () => {
     { id: 'privacy', label: 'Privacy', icon: <Shield size={18} /> },
     { id: 'appearance', label: 'Appearance', icon: <Palette size={18} /> },
     ...(subscriptionEnabled ? [{ id: 'subscription', label: 'Subscription', icon: <Crown size={18} /> }] : [])
-  ];
+  ], []);
 
   useEffect(() => {
     const hash = (window.location.hash || '').replace(/^#/, '');
     if (hash && sidebarItems.some((i) => i.id === hash)) setActiveSection(hash);
-  }, []);
+  }, [sidebarItems]);
 
   const addMyTopic = () => {
     const label = (newTopicLabel || '').trim();
