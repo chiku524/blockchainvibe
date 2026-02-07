@@ -355,15 +355,31 @@ const NewsFeed = ({ category, timeframe, searchQuery }) => {
 
   const { trackActivity } = useUser();
 
+  // Normalize API response to a consistent shape for NewsCard (works with NewsAPI, CryptoCompare, RSS)
+  const normalizeForDisplay = (a) => ({
+    ...a,
+    id: a.id || `news-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    title: a.title || a.headline || 'Untitled',
+    url: a.url || a.link || '#',
+    summary: a.summary || a.description || '',
+    excerpt: a.excerpt || (a.summary || a.description || '').substring(0, 200),
+    content: a.content || a.summary || a.description || '',
+    image_url: a.image_url || a.urlToImage || a.imageurl || null,
+    source: a.source?.name || (typeof a.source === 'string' ? a.source : null) || 'News',
+    published_at: a.published_at || a.publishedAt || new Date().toISOString(),
+    author: a.author || null,
+    categories: a.categories || ['general'],
+  });
+
   useEffect(() => {
-    if (newsData?.news) {
+    if (newsData?.news && Array.isArray(newsData.news)) {
+      const items = newsData.news.map(normalizeForDisplay).filter((a) => a.title && a.url && a.url !== '#');
       if (page === 1) {
-        setAllNews(newsData.news);
+        setAllNews(items);
       } else {
-        setAllNews(prev => {
-          // Avoid duplicates when appending
-          const existingIds = new Set(prev.map(a => a.id));
-          const newArticles = newsData.news.filter(a => !existingIds.has(a.id));
+        setAllNews((prev) => {
+          const existingIds = new Set(prev.map((a) => a.id));
+          const newArticles = items.filter((a) => !existingIds.has(a.id));
           return [...prev, ...newArticles];
         });
       }

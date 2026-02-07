@@ -577,7 +577,7 @@ async function handleTrendingNews(request, env) {
     const sortBy = body.sortBy ?? body.sort ?? 'engagement';
 
     // Fetch trending news with engagement sorting, with timeout
-    const newsItems = await withTimeout(
+    let newsItems = await withTimeout(
       fetchBlockchainNews(limit, {
         category: categoryFilter,
         timeFilter: timeFilter || 'all', // Convert null to 'all' for backend compatibility
@@ -585,8 +585,11 @@ async function handleTrendingNews(request, env) {
         userProfile: null // No personalization for trending
       }, env),
       25000, // 25 seconds timeout (before axios 30s timeout)
-      () => [] // No mock data: return empty so frontend can show maintenance message
+      () => [] // On timeout, try fallback below
     );
+    if (newsItems.length === 0) {
+      newsItems = await fetchCryptoCompareFallback(limit);
+    }
     
     const responseBody = {
       articles: newsItems,
@@ -631,7 +634,7 @@ async function handlePersonalizedNews(request, env) {
   try {
     const body = await request.json().catch(() => ({}));
     const limit = body.limit ?? 20;
-    const timeFilter = body.timeFilter ?? body.timeframe ?? 'today';
+    const timeFilter = body.timeFilter ?? body.timeframe;
     const user_profile = body.user_profile;
     const userId = body.userId;
     const category = body.category ?? 'all';
@@ -666,17 +669,20 @@ async function handlePersonalizedNews(request, env) {
       };
     }
     
-    // Fetch personalized news with timeout
-    const newsItems = await withTimeout(
+    // Fetch personalized news with timeout (use 'all' when no timeframe so we get more articles)
+    let newsItems = await withTimeout(
       fetchBlockchainNews(limit, {
         category,
-        timeFilter,
+        timeFilter: timeFilter || 'all',
         sortBy: 'relevance', // Sort by relevance for personalized
         userProfile: userProfile
       }, env),
       25000, // 25 seconds timeout
-      () => [] // No mock data: return empty so frontend can show maintenance message
+      () => [] // On timeout, try fallback below
     );
+    if (newsItems.length === 0) {
+      newsItems = await fetchCryptoCompareFallback(limit);
+    }
     
     // Calculate user relevance score (with timeout)
     const userRelevanceScore = await withTimeout(
@@ -904,6 +910,66 @@ async function handleNews(request, env) {
   }
 }
 
+// Canonical article shape for the frontend (NewsCard). Maps common API fields to one template.
+function normalizeArticle(article, index) {
+  const id = article.id || `article-${index}-${Date.now()}`;
+  const title = article.title || article.headline || 'Untitled';
+  const url = (article.url || article.link || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
+  const summary = article.summary || article.description || article.body || '';
+  const cleanSummary = (summary || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
+  const content = article.content || article.body || summary || '';
+  const excerpt = (article.excerpt || cleanSummary).substring(0, 200) || cleanSummary.substring(0, 200);
+  const image_url = article.image_url || article.urlToImage || article.imageurl || article.image || null;
+  const source = article.source?.name || article.source?.title || (typeof article.source === 'string' ? article.source : null) || 'News';
+  const rawDate = article.published_at || article.publishedAt || article.published_on;
+  const published_at = typeof rawDate === 'number'
+    ? new Date(rawDate * 1000).toISOString()
+    : (rawDate || new Date().toISOString());
+  return {
+    id,
+    title,
+    url,
+    summary: cleanSummary,
+    excerpt: excerpt || cleanSummary.substring(0, 200),
+    content: (content || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1'),
+    image_url,
+    source,
+    published_at,
+    author: article.author || null,
+    categories: article.categories || ['general'],
+    relevance_score: article.relevance_score ?? 0.5,
+    engagement_metrics: article.engagement_metrics || { likes: 0, views: 0, comments: 0 },
+    processing_timestamp: new Date().toISOString()
+  };
+}
+
+// Fallback: direct fetch from CryptoCompare when aggregator returns no articles (no key required).
+async function fetchCryptoCompareFallback(limit) {
+  const url = 'https://min-api.cryptocompare.com/data/v2/news/?lang=EN';
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'BlockchainVibe/1.0 (News)' }
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    const raw = Array.isArray(data.Data) ? data.Data : [];
+    return raw.slice(0, Math.max(limit, 30)).map((a, i) => normalizeArticle({
+      id: a.id || `cc-${i}-${Date.now()}`,
+      title: a.title,
+      url: a.url || a.guid,
+      summary: (a.body || '').substring(0, 300),
+      body: a.body,
+      excerpt: (a.body || '').substring(0, 200),
+      image_url: a.imageurl,
+      source: (a.source_info && a.source_info.name) ? a.source_info.name : (a.source || 'CryptoCompare'),
+      published_on: a.published_on
+    }, i));
+  } catch (e) {
+    console.error('CryptoCompare fallback error:', e.message || e);
+    return [];
+  }
+}
+
 // Real news fetching using RSS feeds, APIs, uAgents, and knowledge graph
 // Optimized for faster response times. env is used for API keys (e.g. NEWSAPI_KEY).
 async function fetchBlockchainNews(limit, options = {}, env = {}) {
@@ -920,7 +986,7 @@ async function fetchBlockchainNews(limit, options = {}, env = {}) {
       userProfile: options.userProfile
     });
     
-    // Fetch real news from RSS feeds and APIs (this is the main bottleneck)
+    // Fetch real news from RSS feeds and APIs (parallel)
     const rawNews = await aggregator.fetchNews({
       limit: limit * 2, // Fetch more to account for filtering
       category: options.category || 'all',
@@ -932,8 +998,14 @@ async function fetchBlockchainNews(limit, options = {}, env = {}) {
     
     console.log('Raw news fetched:', rawNews.length, 'articles');
     
+    // When aggregator returns nothing, try direct CryptoCompare as fallback so we always have something to show
     if (rawNews.length === 0) {
-      console.log('No RSS news found; returning empty so frontend can show maintenance message');
+      console.log('Aggregator returned 0; trying CryptoCompare fallback');
+      const fallback = await fetchCryptoCompareFallback(limit);
+      if (fallback.length > 0) {
+        console.log('CryptoCompare fallback returned', fallback.length, 'articles');
+        return fallback;
+      }
       return [];
     }
     // If we got very few articles, return only real articles (no mock/dummy data).
@@ -949,69 +1021,11 @@ async function fetchBlockchainNews(limit, options = {}, env = {}) {
       toMerge.sort((a, b) => (new Date(b.published_at || 0).getTime()) - (new Date(a.published_at || 0).getTime()));
       const combined = toMerge.slice(0, limit);
       console.log(`Few articles (${rawNews.length}, ${recent.length} recent); returning ${combined.length} real articles only`);
-      return combined.map((article, index) => {
-        try {
-          const cleanUrl = (article.url || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
-          const cleanSummary = (article.summary || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
-          const cleanContent = (article.content || article.summary || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
-          return {
-            ...article,
-            id: article.id || `article-${index}-${Date.now()}`,
-            url: cleanUrl,
-            summary: cleanSummary,
-            content: cleanContent,
-            excerpt: (article.summary || '').substring(0, 200),
-            categories: article.categories || ['general'],
-            relevance_score: article.relevance_score || 0.5,
-            knowledge_graph_enhanced: false,
-            uagents_processed: false,
-            processing_timestamp: new Date().toISOString()
-          };
-        } catch (e) {
-          return { ...article, id: article.id || `article-${index}-${Date.now()}`, processing_timestamp: new Date().toISOString() };
-        }
-      });
+      return combined.map((article, index) => normalizeArticle(article, index));
     }
     
-    // FAST PATH: Return basic processed articles immediately (skip heavy processing)
-    // This allows the frontend to show articles quickly while enhancement happens
-    const quickProcessed = rawNews.slice(0, limit).map((article, index) => {
-      try {
-        // Lightweight processing - just clean the data
-        const cleanUrl = (article.url || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
-        const cleanSummary = (article.summary || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
-        const cleanContent = (article.content || article.summary || '').replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
-        
-        return {
-          ...article,
-          id: article.id || `article-${index}-${Date.now()}`,
-          url: cleanUrl,
-          summary: cleanSummary,
-          content: cleanContent,
-          excerpt: cleanSummary.substring(0, 200) || cleanSummary,
-          categories: article.categories || ['general'],
-          relevance_score: article.relevance_score || 0.5,
-          knowledge_graph_enhanced: false, // Will be enhanced later if needed
-          uagents_processed: false,
-          processing_timestamp: new Date().toISOString()
-        };
-      } catch (error) {
-        console.error(`Error quick processing article ${index + 1}:`, error);
-        return {
-          ...article,
-          id: article.id || `article-${index}-${Date.now()}`,
-          url: article.url || '',
-          summary: article.summary || '',
-          content: article.content || article.summary || '',
-          excerpt: (article.summary || '').substring(0, 200),
-          categories: ['general'],
-          relevance_score: 0.5,
-          knowledge_graph_enhanced: false,
-          uagents_processed: false,
-          processing_timestamp: new Date().toISOString()
-        };
-      }
-    });
+    // Normalize every article to canonical shape for the frontend (NewsCard / dynamic template)
+    const quickProcessed = rawNews.slice(0, limit).map((article, index) => normalizeArticle(article, index));
     
     // Sort by published date (newest first); treat missing date as oldest
     quickProcessed.sort((a, b) => {
@@ -1021,9 +1035,6 @@ async function fetchBlockchainNews(limit, options = {}, env = {}) {
       return (b.relevance_score || 0) - (a.relevance_score || 0);
     });
     
-    // Return quickly - no heavy processing
-    // Note: Heavy processing (uAgents, knowledge graph) can be done in background
-    // or skipped entirely for faster responses
     return quickProcessed;
   } catch (error) {
     console.error('Error fetching real news:', error);
