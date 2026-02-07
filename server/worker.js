@@ -576,20 +576,21 @@ async function handleTrendingNews(request, env) {
     const categoryFilter = body.categoryFilter ?? body.category ?? 'all';
     const sortBy = body.sortBy ?? body.sort ?? 'engagement';
 
-    // Fetch trending news with engagement sorting, with timeout
-    let newsItems = await withTimeout(
-      fetchBlockchainNews(limit, {
-        category: categoryFilter,
-        timeFilter: timeFilter || 'all', // Convert null to 'all' for backend compatibility
-        sortBy: sortBy || 'engagement', // Use provided sortBy or default to engagement
-        userProfile: null // No personalization for trending
-      }, env),
-      25000, // 25 seconds timeout (before axios 30s timeout)
-      () => [] // On timeout, try fallback below
-    );
-    if (newsItems.length === 0) {
-      newsItems = await fetchCryptoCompareFallback(limit);
-    }
+    // Fetch trending: run main and CryptoCompare fallback in parallel so we usually have articles
+    const [mainResult, fallbackResult] = await Promise.all([
+      withTimeout(
+        fetchBlockchainNews(limit, {
+          category: categoryFilter,
+          timeFilter: timeFilter || 'all',
+          sortBy: sortBy || 'engagement',
+          userProfile: null
+        }, env),
+        25000,
+        () => []
+      ),
+      fetchCryptoCompareFallback(limit)
+    ]);
+    let newsItems = mainResult.length > 0 ? mainResult : fallbackResult;
     
     const responseBody = {
       articles: newsItems,
@@ -669,20 +670,21 @@ async function handlePersonalizedNews(request, env) {
       };
     }
     
-    // Fetch personalized news with timeout (use 'all' when no timeframe so we get more articles)
-    let newsItems = await withTimeout(
-      fetchBlockchainNews(limit, {
-        category,
-        timeFilter: timeFilter || 'all',
-        sortBy: 'relevance', // Sort by relevance for personalized
-        userProfile: userProfile
-      }, env),
-      25000, // 25 seconds timeout
-      () => [] // On timeout, try fallback below
-    );
-    if (newsItems.length === 0) {
-      newsItems = await fetchCryptoCompareFallback(limit);
-    }
+    // Fetch personalized: run main and CryptoCompare fallback in parallel so we usually have articles
+    const [mainResult, fallbackResult] = await Promise.all([
+      withTimeout(
+        fetchBlockchainNews(limit, {
+          category,
+          timeFilter: timeFilter || 'all',
+          sortBy: 'relevance',
+          userProfile: userProfile
+        }, env),
+        25000,
+        () => []
+      ),
+      fetchCryptoCompareFallback(limit)
+    ]);
+    let newsItems = mainResult.length > 0 ? mainResult : fallbackResult;
     
     // Calculate user relevance score (with timeout)
     const userRelevanceScore = await withTimeout(
@@ -944,30 +946,62 @@ function normalizeArticle(article, index) {
 }
 
 // Fallback: direct fetch from CryptoCompare when aggregator returns no articles (no key required).
-async function fetchCryptoCompareFallback(limit) {
+// Retries once and uses a timeout so we don't hang; parses multiple response shapes.
+async function fetchCryptoCompareFallback(limit, retries = 2) {
   const url = 'https://min-api.cryptocompare.com/data/v2/news/?lang=EN';
-  try {
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'BlockchainVibe/1.0 (News)' }
-    });
-    if (!response.ok) return [];
-    const data = await response.json();
-    const raw = Array.isArray(data.Data) ? data.Data : [];
-    return raw.slice(0, Math.max(limit, 30)).map((a, i) => normalizeArticle({
-      id: a.id || `cc-${i}-${Date.now()}`,
-      title: a.title,
-      url: a.url || a.guid,
-      summary: (a.body || '').substring(0, 300),
-      body: a.body,
-      excerpt: (a.body || '').substring(0, 200),
-      image_url: a.imageurl,
-      source: (a.source_info && a.source_info.name) ? a.source_info.name : (a.source || 'CryptoCompare'),
-      published_on: a.published_on
-    }, i));
-  } catch (e) {
-    console.error('CryptoCompare fallback error:', e.message || e);
-    return [];
+  const userAgents = [
+    'Mozilla/5.0 (compatible; BlockchainVibe/1.0; +https://blockchainvibe.news)',
+    'BlockchainVibe/1.0 (News Aggregator)'
+  ];
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(url, {
+        headers: { 'User-Agent': userAgents[attempt % userAgents.length] },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      const text = await response.text();
+      if (!response.ok) {
+        clearTimeout(timeoutId);
+        if (attempt < retries - 1) continue;
+        return [];
+      }
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (_) {
+        clearTimeout(timeoutId);
+        if (attempt < retries - 1) continue;
+        return [];
+      }
+      const raw = Array.isArray(data.Data) ? data.Data : (Array.isArray(data.data) ? data.data : []);
+      if (raw.length === 0 && attempt < retries - 1) {
+        clearTimeout(timeoutId);
+        continue;
+      }
+      return raw.slice(0, Math.max(limit, 30)).map((a, i) => {
+        if (!a || typeof a !== 'object') return null;
+        return normalizeArticle({
+          id: a.id || `cc-${i}-${Date.now()}`,
+          title: a.title || 'Untitled',
+          url: a.url || a.guid || '#',
+          summary: (a.body || '').substring(0, 300),
+          body: a.body,
+          excerpt: (a.body || '').substring(0, 200),
+          image_url: a.imageurl || null,
+          source: (a.source_info && a.source_info.name) ? a.source_info.name : (a.source || 'CryptoCompare'),
+          published_on: a.published_on
+        }, i);
+      }).filter(Boolean);
+    } catch (e) {
+      clearTimeout(timeoutId);
+      console.error(`CryptoCompare fallback attempt ${attempt + 1}:`, e.message || e);
+      if (attempt === retries - 1) return [];
+    }
   }
+  return [];
 }
 
 // Real news fetching using RSS feeds, APIs, uAgents, and knowledge graph
